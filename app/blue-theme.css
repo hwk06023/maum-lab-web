@@ -32,3 +32,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 @media(max-width:380px){.brand-mark>.icon{width:26px;height:26px}.journey>div{gap:8px}.journey>div>span{width:28px;height:28px}}
 /* Auto margins must not shrink flex children to their text width. */
 main.page-width,section.hero.page-width,section.stories.page-width{width:100%}
+/* One locally bundled family across titles, controls, numbers and dialogue. */
+html,body,body *{font-family:var(--font-nanum-square)!important}
+html[data-fonts='loading'] body{visibility:hidden}
+.progress-fill-0{width:0}.progress-fill-1{width:25%}.progress-fill-2{width:50%}.progress-fill-3{width:75%}.progress-fill-4{width:100%}

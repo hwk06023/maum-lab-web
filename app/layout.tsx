@@ -1,6 +1,24 @@
 import type { Metadata, Viewport } from 'next';
+import localFont from 'next/font/local';
 import './globals.css';
 import './blue-theme.css';
+
+const nanumSquare = localFont({
+  src: [
+    { path: './fonts/NanumSquareR.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/NanumSquareB.woff2', weight: '700', style: 'normal' },
+    { path: './fonts/NanumSquareEB.woff2', weight: '800', style: 'normal' }
+  ],
+  variable: '--font-nanum-square',
+  display: 'block',
+  preload: true,
+  adjustFontFallback: false,
+  fallback: []
+});
+
+// A browser's font-display block period can expire on a slow connection.
+// Wait for all used weights before revealing text, without waiting for hydration.
+const fontReadyScript = `(()=>{if(!document.fonts)return;const root=document.documentElement;root.dataset.fonts='loading';const family=${JSON.stringify(nanumSquare.style.fontFamily)};Promise.all([400,700,800].map(weight=>document.fonts.load(weight+' 16px '+family,'마음연습실 ABC 123'))).then(()=>{root.dataset.fonts='ready'},()=>{root.dataset.fonts='error'});})();`;
 
 export const metadata: Metadata = {
   title: '마음연습실 · 이해에서 시작되는 작은 변화',
@@ -17,8 +35,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={nanumSquare.variable} suppressHydrationWarning>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: fontReadyScript }} />
         <a className="skip-link" href="#main">본문으로 건너뛰기</a>
         {/* The home page is prerendered, so buttons can be tapped before React hydrates.
             Remember the last such intent; MaumApp replays it once interactive. */}

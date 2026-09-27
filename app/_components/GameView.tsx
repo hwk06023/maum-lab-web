@@ -88,7 +88,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
 
   return (
     <main id="main" className="game-shell page-width">
-      <div className="progress-steps" aria-label="상담 대화 진행"><div><span className="eyebrow">대화 연습</span><strong>작은 변화까지, 한 걸음씩</strong></div><div className="progress-summary"><div className="progress-track" role="progressbar" aria-label="확인한 변화" aria-valuemin={0} aria-valuemax={4} aria-valuenow={completed}><span style={{ width: `${completed * 25}%` }} /></div><span aria-live="polite">{completed} / 4</span></div></div>
+      <div className="progress-steps" aria-label="상담 대화 진행"><div><span className="eyebrow">대화 연습</span><strong>작은 변화까지, 한 걸음씩</strong></div><div className="progress-summary"><div className="progress-track" role="progressbar" aria-label="확인한 변화" aria-valuemin={0} aria-valuemax={4} aria-valuenow={completed}><span className={`progress-fill-${completed}`} /></div><span aria-live="polite">{completed} / 4</span></div></div>
       <div className="game-grid">
         <aside className={`persona-panel ${c.color}`}>
           <div className="persona-art"><Icon name={c.motif} className="motif" /><span>STORY {String(catalog.findIndex(x => x.id === c.id) + 1).padStart(2, '0')}</span></div>
