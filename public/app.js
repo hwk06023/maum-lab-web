@@ -124,14 +124,14 @@ function openDialog(html, title) {
 }
 function showConsent(id) {
   const c = catalog.find(x => x.id === id);
-  openDialog(`<p class="dialog-intro">${escapeHtml(c.name)}의 이야기를 만나기 전에</p><div class="consent-note">교사·보호자 등 성인을 위한 가상 대화 연습입니다. 모든 캐릭터와 사연은 창작이며, 실제 상담이나 진단을 제공하지 않습니다.</div><form id="consent-form" data-case-id="${id}"><label class="checkbox-label"><input type="checkbox" name="consent" required><span>가상의 사례만 입력하며, 실제 아이의 이름·학교·연락처 등 개인정보는 입력하지 않겠습니다.</span></label>${mode === 'live' ? `<label class="checkbox-label"><input type="checkbox" name="aiConsent" required><span>입력과 대화 맥락이 ${escapeHtml(aiProviderLabel)}로 전송됨을 이해합니다. 공급자 측 보관 가능성이 있으며, 민감한 실제 사례는 입력하지 않습니다.</span></label><label class="field-label" for="access-code">파일럿 접근 코드</label><input class="access-input" id="access-code" name="accessCode" type="password" autocomplete="off" required>` : '<p class="small-note">현재는 규칙 기반 데모입니다. LLM API를 호출하지 않습니다.</p>'}<p class="small-note">대화는 서버 메모리에 최대 1시간 유지됩니다. 종료하면 삭제됩니다. 새로고침 시에는 남아 있는 세션을 다시 엽니다.</p><p class="form-error" role="alert"></p><button class="button primary full-width" type="submit">이야기 시작하기 ${icon('arrow')}</button></form>`, '한 걸음, 천천히 시작해요.');
+  openDialog(`<p class="dialog-intro">${escapeHtml(c.name)}의 이야기를 만나기 전에</p><div class="consent-note">교사·보호자 등 성인을 위한 가상 대화 연습입니다. 모든 캐릭터와 사연은 창작이며, 실제 상담이나 진단을 제공하지 않습니다.</div><form id="consent-form" data-case-id="${id}"><label class="checkbox-label"><input type="checkbox" name="consent" required><span>가상의 사례만 입력하며, 실제 아이의 이름·학교·연락처 등 개인정보는 입력하지 않겠습니다.</span></label>${mode === 'demo' ? '<p class="small-note">현재는 규칙 기반 데모입니다. LLM API를 호출하지 않습니다.</p>' : ''}<p class="small-note">대화는 서버 메모리에 최대 1시간 유지됩니다. 종료하면 삭제됩니다. 새로고침 시에는 남아 있는 세션을 다시 엽니다.</p><p class="form-error" role="alert"></p><button class="button primary full-width" type="submit">이야기 시작하기 ${icon('arrow')}</button></form>`, '한 걸음, 천천히 시작해요.');
 }
 async function startSession(form) {
   const data = new FormData(form);
   const button = form.querySelector('button[type="submit"]');
   button.disabled = true;
   try {
-    session = await api('/api/session', { caseId: form.dataset.caseId, consent: data.has('consent'), aiConsent: data.has('aiConsent'), accessCode: data.get('accessCode') || '' });
+    session = await api('/api/session', { caseId: form.dataset.caseId, consent: data.has('consent') });
     hintsOpen = false;
     document.querySelector('dialog')?.close();
     renderGame(true);
