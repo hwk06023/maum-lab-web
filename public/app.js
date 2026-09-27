@@ -75,7 +75,7 @@ function renderHome() {
       <div class="floating-label bottom-label">${icon('spark')} 작은 변화가 시작되는 곳</div>
     </div></section>
     <section class="journey page-width" aria-label="연습 과정"><div><span>01</span><div><strong>이야기 듣기</strong><p>질문 속에서 상황의 단서를 찾아요.</p></div></div><i></i><div><span>02</span><div><strong>방법 함께 찾기</strong><p>아이와 어른이 할 일을 함께 정해요.</p></div></div><i></i><div><span>03</span><div><strong>작은 변화 연습하기</strong><p>다른 상황에서도 방법을 써봐요.</p></div></div></section>
-    <section id="stories" class="stories page-width" aria-labelledby="stories-title"><div class="section-heading"><div><p class="eyebrow">SIX STORIES, SMALL STEPS</p><h2 id="stories-title">오늘은 누구의 이야기를 들어볼까요?</h2><p>난이도는 아이의 문제가 아니라, 이해해야 할 상황의 복잡도예요.</p></div><span class="story-count">${cases.length}<small>개의 이야기</small></span></div>
+    <section id="stories" class="stories page-width" aria-labelledby="stories-title"><div class="section-heading"><div><p class="eyebrow">SIX STORIES, SMALL STEPS</p><h2 id="stories-title">오늘은 누구의 이야기를 들어볼까요?</h2><p>단계가 올라갈수록 대화 거부와 감정 반응이 강한 상황을 연습해요.</p></div><span class="story-count">${cases.length}<small>개의 이야기</small></span></div>
       <div class="filter-row"><div class="filters" role="group" aria-label="난이도 선택">${[[0, '전체 이야기'], [1, 'Lv.1 마음 알아보기'], [2, 'Lv.2 관계 이해하기'], [3, 'Lv.3 함께 바꾸기']].map(([id, text]) => `<button class="filter ${filter === id ? 'selected' : ''}" data-filter="${id}" aria-pressed="${filter === id}">${text}</button>`).join('')}</div><span class="filter-note">각 단계 남아 1명 · 여아 1명</span></div>
       <div class="card-grid">${cases.map(c => `<article class="story-card ${c.color}"><div class="card-visual"><span class="level-badge">LEVEL ${String(c.level).padStart(2, '0')}</span><span class="visual-orbit"></span>${icon(c.motif, 'motif')}<span class="visual-dot"></span><span class="card-index">${String(catalog.indexOf(c) + 1).padStart(2, '0')}</span></div><div class="card-body"><div class="persona-line"><span class="persona-dot"></span><strong>${escapeHtml(c.name)}</strong><span>만 ${c.age}세 · ${c.gender}</span></div><h3>${escapeHtml(c.title)}</h3><p>${escapeHtml(c.subtitle)}</p><span class="skill-tag">${icon('leaf')}${escapeHtml(c.skill)}</span><button class="card-start" data-case="${c.id}" aria-label="${c.name}의 이야기 만나기">이야기 만나기 ${icon('arrow')}</button></div></article>`).join('')}</div>
       <div class="principle-note">${icon('note')}<p><strong>정답을 말하는 것보다, 함께 방법을 찾는 연습.</strong><br>진단명을 맞히거나 아이를 복종시키는 게임이 아니에요. 질문하고, 확인하고, 실행 가능한 도움을 만들어 보세요.</p></div>
@@ -85,8 +85,8 @@ const stageLabels = ['이야기 듣기', '함께 정하기', '연습하기', '�
 const stages = ['listen', 'plan', 'rehearse', 'transfer', 'complete'];
 function renderChildMessage(text) {
   const descriptions = [];
-  const dialogue = text.replace(/\([^()]+\)|（[^（）]+）/g, description => {
-    descriptions.push(`<em class="bubble-description">${escapeHtml(description)}</em>`);
+  const dialogue = text.replace(/\([^()]+\)|（[^（）]+）|\*[^*\n]+\*/g, description => {
+    descriptions.push(`<em class="bubble-description">*${escapeHtml(description.slice(1, -1).trim())}*</em>`);
     return '';
   }).trim();
   return [...descriptions, ...(dialogue ? [escapeHtml(dialogue)] : [])].join('<br>');
