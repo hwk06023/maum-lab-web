@@ -28,6 +28,10 @@ let filter = 0;
 let session = null;
 let busy = false;
 let pendingMessage = null;
+// Intentionally page memory, not sessionStorage/localStorage: reload starts fresh.
+// Keep the last acknowledged state/checkpoint and any unacknowledged request.
+let pendingRequest = null;
+let draftText = '';
 let hintsOpen = false;
 let toastTimer;
 
@@ -39,8 +43,10 @@ function toast(text) {
   toastTimer = setTimeout(() => { el.hidden = true; }, 7000);
 }
 async function api(path, body, method = body ? 'POST' : 'GET') {
+  const headers = body ? { 'Content-Type': 'application/json' } : {};
+  if (session?.sessionId) headers['x-maum-session-id'] = session.sessionId;
   const response = await fetch(path, {
-    method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {},
+    method, credentials: 'same-origin', headers,
     body: body ? JSON.stringify(body) : undefined
   });
   let data;
@@ -113,7 +119,8 @@ function renderGame(focus = false) {
       ${session.plan?.agreed && session.stage === 'plan' ? `<button class="support-button" data-action="support" ${busy ? 'disabled' : ''}>${icon('shield')} 주변 어른의 지원 약속 확인하기 ${icon('arrow')}</button>` : ''}
       <div class="suggestion-head"><button class="hint-toggle" data-action="hints" aria-expanded="${revealHints}">${icon('spark')} 질문 도우미 ${revealHints ? '−' : '+'}</button>${mode === 'demo' ? '<span>데모에서는 예시 질문으로 흐름을 확인해 보세요.</span>' : ''}</div>
       ${revealHints ? `<div class="suggestions">${session.suggestions.map((s, i) => `<button data-suggestion="${i}" ${busy ? 'disabled' : ''}>${escapeHtml(s)}</button>`).join('')}</div>` : ''}
-      <form id="chat-form" class="composer"><label class="sr-only" for="message-input">${escapeHtml(c.name)}에게 할 말</label><textarea id="message-input" name="message" rows="2" maxlength="1000" placeholder="${escapeHtml(c.name)}에게 궁금한 점을 물어보세요." ${busy ? 'disabled' : ''}></textarea><button class="send-button" type="submit" aria-label="대화 보내기" ${busy ? 'disabled' : ''}>${icon('send')}</button></form><div class="input-meta"><span>Enter 전송 · Shift + Enter 줄바꿈</span><span id="input-count">0 / 1,000</span></div><p class="input-privacy">실제 아이의 이름·학교·연락처를 입력하지 마세요.</p></div>`}
+      ${pendingRequest && !busy ? '<button class="support-button" data-action="retry">대화는 유지되어 있어요. 응답 다시 받기</button>' : ''}
+      <form id="chat-form" class="composer"><label class="sr-only" for="message-input">${escapeHtml(c.name)}에게 할 말</label><textarea id="message-input" name="message" rows="2" maxlength="1000" placeholder="${escapeHtml(c.name)}에게 궁금한 점을 물어보세요." ${busy || pendingRequest ? 'disabled' : ''}>${escapeHtml(draftText)}</textarea><button class="send-button" type="submit" aria-label="대화 보내기" ${busy || pendingRequest ? 'disabled' : ''}>${icon('send')}</button></form><div class="input-meta"><span>Enter 전송 · Shift + Enter 줄바꿈</span><span id="input-count">${draftText.length} / 1,000</span></div><p class="input-privacy">실제 아이의 이름·학교·연락처를 입력하지 마세요.</p></div>`}
     </section><aside class="notebook"><div class="notebook-title">${icon('note')}<h2>마음 단서 노트</h2><span>${session.notes.length}/3</span></div><p class="notebook-intro">추측이 아닌, 대화로 확인한 사실을 모아요.</p><div class="notes-list">${[0, 1, 2].map(i => session.notes[i] ? `<article class="clue-note"><span>단서 ${String(i + 1).padStart(2, '0')} · 확인됨</span><h3>${escapeHtml(session.notes[i].label)}</h3><p>${escapeHtml(session.notes[i].text)}</p><button data-evidence="${session.notes[i].evidence.childTurnId}">대화 근거 보기 ${icon('arrow')}</button></article>` : `<div class="empty-note"><span>0${i + 1}</span><p>아직 발견하지 못한 단서<br><small>대화를 통해 한 걸음씩 알아가요.</small></p></div>`).join('')}</div>
       <div class="milestones"><h3>작은 변화까지</h3>${[['understanding','상황의 맥락 이해'],['agreement','아이와 방법 합의'],['support','주변 어른의 지원 확인'],['practice','첫 장면에서 연습'],['transfer','다른 장면에 적용']].map(([key,label])=>`<div class="${session.milestones[key] ? 'achieved' : ''}"><span>${session.milestones[key] ? icon('check') : ''}</span>${label}</div>`).join('')}</div><p class="simulation-note">게임의 진행 조건입니다.<br>실제 심리 상태를 측정하지 않습니다.</p>
     </aside></div><div class="game-bottom-note">${icon('shield')}${mode === 'demo' ? '규칙 기반 데모 · 반응과 재연은 작성된 시나리오 분기입니다. AI 대화가 아닙니다.' : 'AI 파일럿 · 입력은 ' + escapeHtml(aiProviderLabel) + '로 전송됩니다. 결과는 가상 연습에만 해당합니다.'}</div></main>${footer()}`;
@@ -138,14 +145,17 @@ function openDialog(html, title) {
 }
 function showConsent(id) {
   const c = catalog.find(x => x.id === id);
-  openDialog(`<p class="dialog-intro">${escapeHtml(c.name)}의 이야기를 만나기 전에</p><div class="consent-note">교사·보호자 등 성인을 위한 가상 대화 연습입니다. 모든 캐릭터와 사연은 창작이며, 실제 상담이나 진단을 제공하지 않습니다.</div><form id="consent-form" data-case-id="${id}"><label class="checkbox-label"><input type="checkbox" name="consent" required><span>가상의 사례만 입력하며, 실제 아이의 이름·학교·연락처 등 개인정보는 입력하지 않겠습니다.</span></label>${mode === 'demo' ? '<p class="small-note">현재는 규칙 기반 데모입니다. LLM API를 호출하지 않습니다.</p>' : ''}<p class="small-note">대화는 서버 메모리에 최대 1시간 유지됩니다. 종료하면 삭제됩니다. 새로고침 시에는 남아 있는 세션을 다시 엽니다.</p><p class="form-error" role="alert"></p><button class="button primary full-width" type="submit">이야기 시작하기 ${icon('arrow')}</button></form>`, '한 걸음, 천천히 시작해요.');
+  openDialog(`<p class="dialog-intro">${escapeHtml(c.name)}의 이야기를 만나기 전에</p><div class="consent-note">교사·보호자 등 성인을 위한 가상 대화 연습입니다. 모든 캐릭터와 사연은 창작이며, 실제 상담이나 진단을 제공하지 않습니다.</div><form id="consent-form" data-case-id="${id}"><label class="checkbox-label"><input type="checkbox" name="consent" required><span>가상의 사례만 입력하며, 실제 아이의 이름·학교·연락처 등 개인정보는 입력하지 않겠습니다.</span></label>${mode === 'demo' ? '<p class="small-note">현재는 규칙 기반 데모입니다. LLM API를 호출하지 않습니다.</p>' : ''}<p class="small-note">대화는 현재 페이지를 사용하는 동안 유지됩니다. 새로고침하거나 연습을 종료하면 초기화됩니다.</p><p class="form-error" role="alert"></p><button class="button primary full-width" type="submit">이야기 시작하기 ${icon('arrow')}</button></form>`, '한 걸음, 천천히 시작해요.');
 }
 async function startSession(form) {
   const data = new FormData(form);
   const button = form.querySelector('button[type="submit"]');
   button.disabled = true;
   try {
-    session = await api('/api/session', { caseId: form.dataset.caseId, consent: data.has('consent') });
+    session = await api('/api/session', { caseId: form.dataset.caseId, consent: data.has('consent'), pageSession: true });
+    pendingRequest = null;
+    pendingMessage = null;
+    draftText = '';
     hintsOpen = false;
     document.querySelector('dialog')?.close();
     renderGame(true);
@@ -153,32 +163,44 @@ async function startSession(form) {
   } catch (e) { form.querySelector('.form-error').textContent = e.message; button.disabled = false; }
 }
 async function sendAction(action) {
-  if (busy || !session) return;
-  busy = true;
+  if (busy || !session || pendingRequest) return;
+  if (session.turns >= 40) return toast('한 회차의 대화 한도에 도달했습니다. 현재 대화 기록은 그대로 유지됩니다.');
+  pendingRequest = { requestId: crypto.randomUUID(), version: session.version, action, recoveryToken: session.recoveryToken };
   pendingMessage = action.kind === 'say' ? { id: 'pending-message', role: 'user', text: action.text } : null;
-  const version = session.version;
-  let restoreInput = false;
+  if (action.kind === 'say') draftText = '';
+  await submitPendingRequest();
+}
+async function submitPendingRequest() {
+  if (busy || !session || !pendingRequest) return;
+  busy = true;
+  const request = pendingRequest;
   renderGame();
-  try {
-    session = await api('/api/turn', { requestId: crypto.randomUUID(), version, action });
-  } catch (e) {
-    toast(e.message);
-    // Reconcile after network uncertainty instead of blindly replaying a potentially committed turn.
-    try { session = await api('/api/session'); } catch (readError) {
-      if (readError.status === 401) session = null;
-    }
-    restoreInput = action.kind === 'say' && session?.version === version;
-  } finally {
-    busy = false;
+  const accept = next => {
+    session = next;
+    pendingRequest = null;
     pendingMessage = null;
-    if (session) renderGame(true); else renderHome();
-    if (restoreInput) {
-      const input = document.querySelector('#message-input');
-      if (input) {
-        input.value = action.text;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        accept(await api('/api/turn', request));
+        break;
+      } catch (error) {
+        // A response can be lost after a committed turn. Reconcile first, then
+        // reuse the SAME request ID/checkpoint so retrying cannot append twice.
+        try {
+          const latest = await api('/api/session');
+          if (latest.version > request.version) { accept(latest); break; }
+        } catch { /* A missing server cache never clears the page transcript. */ }
+        const transient = !error.status || error.status === 401 || error.status === 503 || error.status === 504;
+        if (!attempt && transient) continue;
+        toast(error.message);
+        break;
       }
     }
+  } finally {
+    busy = false;
+    renderGame(true);
   }
 }
 async function goHome() {
@@ -186,9 +208,12 @@ async function goHome() {
   if (session && session.stage !== 'complete' && !window.confirm('연습을 종료할까요? 서버에 남아 있는 대화 기록이 삭제됩니다.')) return;
   if (session) {
     try { await api('/api/session', undefined, 'DELETE'); }
-    catch (e) { toast(e.message); return; }
+    catch { /* Explicitly ending the local page session works even offline. */ }
   }
   session = null;
+  pendingRequest = null;
+  pendingMessage = null;
+  draftText = '';
   renderHome();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
@@ -228,9 +253,10 @@ document.addEventListener('click', event => {
     case 'hints': hintsOpen = !hintsOpen; return renderGame();
     case 'support': return sendAction({ kind: 'support' });
     case 'resume': return sendAction({ kind: 'resume' });
+    case 'retry': return submitPendingRequest();
     case 'export': return downloadResult();
     case 'guide': return openDialog(`<div class="guide-steps"><h3>01. 먼저 듣고 확인해요</h3><p>언제 어려운지, 그 전후에 어떤 일이 있었는지 질문하세요. 발견한 사실은 단서 노트에 남습니다.</p><h3>02. 함께 방법을 정해요</h3><p>아이가 할 행동, 어른의 구체적인 지원을 제안하고 아이의 의견을 물어보세요. 지원 약속까지 확인해야 다음 단계로 갑니다.</p><h3>03. 두 장면에서 연습해요</h3><p>처음 장면과 다른 상황에 합의한 방법을 적용해 보세요. 정해진 게임 조건을 통과하면 변화 기록을 확인할 수 있습니다.</p></div><div class="consent-note">난이도는 상황의 복잡도입니다. 결과는 실제 아동의 변화나 상담 능력을 보증하지 않습니다. 데모 판정은 키워드 기반이라 합리적인 표현을 놓칠 수 있습니다.</div>`, '마음연습실, 이렇게 이용해요.');
-    case 'privacy': return openDialog(`<div class="guide-steps"><h3>가상 사례만 사용해요</h3><p>성인의 교육·연습용 프로토타입입니다. 실제 아동의 이름, 학교, 연락처, 건강·가족 정보는 입력하지 마세요. 간단한 탐지 규칙은 모든 개인정보를 걸러내지 못합니다.</p><h3>대화의 저장 범위</h3><p>이 앱은 대화를 데이터베이스나 분석 로그에 저장하지 않습니다. 세션은 서버 메모리에 최대 1시간 남으며 종료 시 삭제됩니다. 서비스 운영 환경의 접근 로그는 별도 점검 대상입니다.</p><h3>AI 모드의 외부 전송</h3><p>AI 모드에서는 입력과 대화 맥락이 ${escapeHtml(aiProviderLabel)}로 전송됩니다. 응답 저장을 끄더라도 공급자 측 보관이 전혀 없다는 뜻은 아닙니다. 운영자는 기관의 승인·개인정보 처리·보안 요건을 따로 검토해야 합니다.</p></div>`, '연습 데이터 안내');
+    case 'privacy': return openDialog(`<div class="guide-steps"><h3>가상 사례만 사용해요</h3><p>성인의 교육·연습용 프로토타입입니다. 실제 아동의 이름, 학교, 연락처, 건강·가족 정보는 입력하지 마세요. 간단한 탐지 규칙은 모든 개인정보를 걸러내지 못합니다.</p><h3>대화의 저장 범위</h3><p>대화와 암호화된 복구 정보는 현재 페이지 메모리에 보관하며 새로고침·종료 시 초기화됩니다. 서버는 마지막 요청부터 최대 1시간 동안 처리용 사본을 메모리에 보관합니다. 서버가 재시작되어도 열린 페이지의 복구 정보로 이어갈 수 있습니다. 이 앱은 대화를 데이터베이스나 분석 로그에 저장하지 않습니다.</p><h3>AI 모드의 외부 전송</h3><p>AI 모드에서는 입력과 대화 맥락이 ${escapeHtml(aiProviderLabel)}로 전송됩니다. 응답 저장을 끄더라도 공급자 측 보관이 전혀 없다는 뜻은 아닙니다. 운영자는 기관의 승인·개인정보 처리·보안 요건을 따로 검토해야 합니다.</p></div>`, '연습 데이터 안내');
   }
 });
 document.addEventListener('submit', event => {
@@ -247,7 +273,10 @@ document.addEventListener('keydown', event => {
   }
 });
 document.addEventListener('input', event => {
-  if (event.target.id === 'message-input') document.querySelector('#input-count').textContent = `${event.target.value.length} / 1,000`;
+  if (event.target.id === 'message-input') {
+    draftText = event.target.value;
+    document.querySelector('#input-count').textContent = `${draftText.length} / 1,000`;
+  }
 });
 
 try {
@@ -255,8 +284,8 @@ try {
   catalog = data.cases; mode = data.mode;
   aiLabel = data.ai?.model ?? 'AI 파일럿';
   aiProviderLabel = data.ai?.label ?? '외부 AI 공급자 API';
-  try { session = await api('/api/session'); } catch (e) { if (e.status !== 401) toast(e.message); }
-  if (session) renderGame(); else renderHome();
+  // A document load/reload deliberately starts a fresh page-local conversation.
+  renderHome();
 } catch {
   app.innerHTML = '<main id="main" class="loading"><h1>연습실을 준비하고 있어요.</h1><p>지금은 서버에 연결할 수 없습니다. 잠시 후 페이지를 새로고침해 주세요.</p></main>';
 }

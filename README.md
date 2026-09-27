@@ -13,7 +13,7 @@ Vercel은 이 저장소의 **main**을 Production으로 배포합니다. 정적 
 - Production 환경변수: `MAUM_BACKEND_URL`, `MAUM_PROXY_SECRET`
 - Vercel의 Git 연동이 main 변경을 자동 배포합니다. 별도 GitHub Vercel 배포 워크플로는 필요하지 않습니다.
 
-`public/`은 화면과 정적 자산, `api/`는 네 가지 서버리스 API 진입점, `lib/proxy.mjs`는 Fly API로의 인증된 연결입니다. API 응답은 캐시하지 않으며 세션 쿠키는 웹 도메인에 유지됩니다. OpenAI 키나 페르소나 내부 정보는 브라우저로 보내지 않습니다.
+`public/`은 화면과 정적 자산, `api/`는 네 가지 서버리스 API 진입점, `lib/proxy.mjs`는 Fly API로의 인증된 연결입니다. API 응답은 캐시하지 않습니다. 대화·페이지별 세션 ID·암호화된 서버 복구 정보는 현재 페이지 메모리에서 유지하며 새로고침하면 초기화됩니다. 통신 오류 시 마지막 대화와 미확인 요청을 유지하고 같은 요청 ID로 재시도합니다. API 키나 읽을 수 있는 내부 페르소나 정보는 브라우저로 보내지 않습니다.
 
 ## 서버와 콘텐츠 작업
 

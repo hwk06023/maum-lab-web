@@ -84,6 +84,6 @@ Fly 앱은 `maum-lab-server`의 `main`과 저장소 루트의 Dockerfile/fly.tom
 
 ## 운영 범위
 
-현재 세션·호출 예산은 단일 Node 프로세스 메모리에 있으며 세션 만료는 1시간입니다. 서버 재시작/배포 시 세션이 초기화되고 배포 중 잠시 중단될 수 있습니다. 다중 머신이나 세션 영속화가 필요하면 공유 저장소를 추가해야 합니다. Vercel 함수에는 세션 상태를 저장하지 않습니다. 실제 Vercel/Fly 배포 및 LLM 실호출 검증은 계정 설정 이후 수행해야 합니다.
+웹 페이지는 대화와 암호화 복구 정보를 메모리에 보관하며 새로고침·종료 시 초기화합니다. 서버의 처리용 캐시는 마지막 요청부터 1시간 유지되고, 만료·재시작 시 페이지가 가진 복구 정보로 다음 요청에서 이어갑니다. 복구 키는 기존 `MAUM_PROXY_SECRET`에서 파생하며 추가 환경변수는 없습니다. 이 비밀값을 교체하면 이전 복구 정보는 사용할 수 없습니다. 호출 예산·동시 처리·요청 중복 방지는 단일 프로세스 기준이므로 Fly 머신은 1개로 유지합니다. Vercel 함수에는 대화 상태를 저장하지 않습니다.
 
 참고: [Vercel Node.js Functions](https://vercel.com/docs/functions/runtimes/node-js), [Vercel 빌드 설정](https://vercel.com/docs/builds/configure-a-build), [Fly GitHub Actions](https://docs.fly.io/launch/continuous-deployment-with-github-actions/), [Fly 설정](https://docs.fly.io/reference/configuration/).
