@@ -193,7 +193,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const goHome = (event?: React.MouseEvent<HTMLButtonElement>) => {
     const current = sessionRef.current;
     if (busyRef.current) return toast('응답 처리 후 이동해 주세요.');
-    if (current && current.stage !== 'complete') {
+    if (current && !['complete', 'failed'].includes(current.stage)) {
       const button = event?.currentTarget ?? null;
       const intent = exitIntent.current;
       if (!button || intent?.button !== button || Date.now() >= intent.expires) {
@@ -274,6 +274,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
       {dialog?.type === 'consent' && catalog && (
         <ConsentDialog
           name={catalog.cases.find(c => c.id === dialog.caseId)?.name ?? ''}
+          maxTurns={catalog.cases.find(c => c.id === dialog.caseId)?.game?.maxTurns}
           demo={mode === 'demo'} onClose={closeDialog}
           onSubmit={consent => startSession(dialog.caseId, consent)} />
       )}
@@ -292,8 +293,8 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   );
 }
 
-function ConsentDialog({ name, demo, onClose, onSubmit }: {
-  name: string; demo: boolean; onClose: () => void; onSubmit: (consent: boolean) => Promise<string | null>;
+function ConsentDialog({ name, maxTurns, demo, onClose, onSubmit }: {
+  name: string; maxTurns?: number; demo: boolean; onClose: () => void; onSubmit: (consent: boolean) => Promise<string | null>;
 }) {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -309,6 +310,7 @@ function ConsentDialog({ name, demo, onClose, onSubmit }: {
       }}>
         <div className="consent-details">
         <div className="consent-note"><strong>여러분은 상담 선생님입니다.</strong><p>오늘 처음 만난 가상의 학생과 상담실에서 대화합니다.<br />성인 교육용이며 실제 상담, 진단이 아닙니다.</p></div>
+        <p className="small-note">{maxTurns ? `제한 ${maxTurns}턴 안에 목표를 확인하면 S~D 등급으로 완료됩니다. 마지막 턴까지 미완료이면 교화 실패로 종료되며 기록은 저장할 수 있어요.` : ""}</p>
         <label className="checkbox-label"><input type="checkbox" name="consent" required /><span>실제 개인정보 없이, 가상 사례만 입력할게요.</span></label>
         {demo && <p className="small-note">규칙 기반 데모 / AI 호출 없음</p>}
         <p className="small-note">새로고침하거나 연습을 종료하면 대화가 초기화돼요.</p>

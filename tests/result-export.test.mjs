@@ -11,3 +11,9 @@ test('download contains the complete ordered conversation and reflection but no 
  assert.equal(JSON.stringify(downloaded).includes('do-not-export'),false);
  assert.equal(downloaded.messages[0].text,messages[0].text);
 });
+
+
+test('failed game export preserves grade outcome, turns and entire transcript',()=>{
+ const session={mode:'live',case:{id:'minjun'},turns:15,game:{outcome:'failed',grade:null,maxTurns:15},result:{title:'교화 실패'},messages:[{id:'m1',role:'child',text:'아직 싫어요.'}],relationshipState:{trust:20}};
+ const output=buildResultExport(session);assert.equal(output.turns,15);assert.deepEqual(output.game,session.game);assert.equal(output.messages.length,1);assert.equal(output.relationshipState,undefined);
+});

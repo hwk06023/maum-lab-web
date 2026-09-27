@@ -101,10 +101,10 @@ export default function GameView({ session, catalog, busy, hasPending, pendingMe
         <section className="conversation" aria-label="아이와 대화">
           <div className="conversation-head">
             <div><strong>{c.name}{subjectParticle(c.name) === '이' ? '과' : '와'}의 대화</strong></div>
-            <span>{session.turns}턴</span>
+            <span>{session.game ? `${session.turns} / ${session.game.maxTurns}턴` : `${session.turns}턴`}</span>
           </div>
           <div className="chat-messages" role="log" aria-label="대화 기록" aria-live="polite" ref={logRef}>
-            <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{displayText(c.brief)}</p><p className="scenario-role">나의 역할 / 오늘 처음 만난 상담 선생님</p></div>
+            <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{displayText(c.brief)}</p><p className="scenario-role">나의 역할 / 오늘 처음 만난 상담 선생님</p>{session.game && <p>제한 {session.game.maxTurns}턴 / {Object.entries(session.game.thresholds).map(([grade,turns]) => `${grade} ${turns}턴 이내`).join(" / ")}<br />게임 기록이며 상담 능력 평가는 아닙니다.</p>}</div>
             {messages.map(m => m.role === 'guide' || m.role === 'scene'
               ? <div key={m.id} className={`message-${m.role}${highlight === m.id ? ' highlight' : ''}`} id={m.id}><Icon name={m.role === 'scene' ? 'spark' : 'note'} /><p>{displayText(m.text)}</p></div>
               : <div key={m.id} className={`message-row ${m.role}${highlight === m.id ? ' highlight' : ''}`} id={m.id}>
@@ -114,7 +114,7 @@ export default function GameView({ session, catalog, busy, hasPending, pendingMe
             {(busy || playing) && <div className="thinking" role="status">{c.name}의 말을 기다리고 있어요.</div>}
           </div>
           {session.result && !playing ? (
-            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{displayText(session.result.title)}</h2><p>{displayText(session.result.change)}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}
+            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p>{session.game && <div className={`game-result ${session.game.outcome}`}><strong>{session.game.outcome === 'cleared' ? `교화 등급 ${session.game.grade}` : '제한 턴 종료'}</strong><p>{session.turns} / {session.game.maxTurns}턴</p><small>{session.game.scope}</small></div>}<h2>{displayText(session.result.title)}</h2><p>{displayText(session.result.change)}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}
               {session.result.reflection && <div className="learning-reflection">
                 <h3>내 대화 돌아보기</h3>
                 <div className="reflection-evidence">{session.result.reflection.evidence.map(item => <div className="learning-card" key={item.label}><h4>{item.label}</h4><p>{displayText(item.text)}</p><button onClick={() => showEvidence(item.messageId)}>대화에서 보기</button></div>)}</div>
