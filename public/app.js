@@ -83,6 +83,10 @@ function renderHome() {
 }
 const stageLabels = ['이야기 듣기', '함께 정하기', '연습하기', '다른 상황', '변화 기록'];
 const stages = ['listen', 'plan', 'rehearse', 'transfer', 'complete'];
+function subjectParticle(name) {
+  const last = name.charCodeAt(name.length - 1);
+  return last >= 0xac00 && last <= 0xd7a3 && (last - 0xac00) % 28 !== 0 ? '이' : '가';
+}
 function renderChildMessage(text) {
   const descriptions = [];
   const dialogue = text.replace(/\([^()]+\)|（[^（）]+）|\*[^*\n]+\*/g, description => {
@@ -100,11 +104,11 @@ function renderGame(focus = false) {
   const revealHints = c.level === 1 || hintsOpen;
   const messages = pendingMessage ? [...session.messages, pendingMessage] : session.messages;
   app.innerHTML = `${header(true)}<main id="main" class="game-shell page-width">${progress()}
-    <div class="game-grid"><aside class="persona-panel ${c.color}"><div class="persona-art">${icon(c.motif, 'motif')}<span>STORY ${String(catalog.findIndex(x => x.id === c.id) + 1).padStart(2, '0')}</span></div><div class="persona-info"><span class="level-pill">LEVEL ${c.level}</span><h1>${escapeHtml(c.name)}의 이야기</h1><p class="persona-age">만 ${c.age}세 · ${c.gender}</p><h2>${escapeHtml(c.title)}</h2><p>${escapeHtml(c.brief)}</p><div class="profile-detail"><span>좋아하는 것</span><strong>${escapeHtml(c.interest)}</strong></div><div class="profile-detail"><span>아이의 강점</span><strong>${escapeHtml(c.strength)}</strong></div></div><div class="persona-tip">${icon('leaf')}<p>먼저 판단하지 않고,<br>한 가지씩 물어봐 주세요.</p></div></aside>
+    <div class="game-grid"><aside class="persona-panel ${c.color}"><div class="persona-art">${icon(c.motif, 'motif')}<span>STORY ${String(catalog.findIndex(x => x.id === c.id) + 1).padStart(2, '0')}</span></div><div class="persona-info"><span class="level-pill">LEVEL ${c.level}</span><h1>${escapeHtml(c.name)}의 이야기</h1><p class="persona-age">만 ${c.age}세 · ${c.gender}</p><h2>${escapeHtml(c.title)}</h2><div class="profile-detail"><span>좋아하는 것</span><strong>${escapeHtml(c.interest)}</strong></div><div class="profile-detail"><span>아이의 강점</span><strong>${escapeHtml(c.strength)}</strong></div></div><div class="persona-tip">${icon('leaf')}<p>먼저 판단하지 않고,<br>한 가지씩 물어봐 주세요.</p></div></aside>
     <section class="conversation" aria-label="아이와 대화"><div class="conversation-head"><div><span class="status-dot"></span><strong>${escapeHtml(c.name)}와 나누는 대화</strong></div><span>${session.turns} / 40턴</span></div>
-    <div class="chat-messages" role="log" aria-label="대화 기록" aria-live="polite">${messages.map(m => m.role === 'guide' || m.role === 'scene'
+    <div class="chat-messages" role="log" aria-label="대화 기록" aria-live="polite"><div class="scenario-intro" role="note" aria-label="상황 안내"><strong>${icon('note')}상황 안내</strong><p>${escapeHtml(c.brief)}</p><p class="scenario-role">당신은 아이와 대화하는 상담자입니다.</p></div>${messages.map(m => m.role === 'guide' || m.role === 'scene'
       ? `<div class="message-${m.role}" id="${m.id}">${icon(m.role === 'scene' ? 'spark' : 'note')}<p>${escapeHtml(m.text)}</p></div>`
-      : `<div class="message-row ${m.role}" id="${m.id}">${m.role === 'child' ? `<span class="chat-avatar ${c.color}">${escapeHtml(c.name.slice(0, 1))}</span>` : ''}<div>${m.role === 'child' ? `<span class="message-name">${escapeHtml(c.name)}</span>` : ''}<p class="bubble">${m.role === 'child' ? renderChildMessage(m.text) : escapeHtml(m.text)}</p></div></div>`).join('')}${busy ? '<div class="thinking" role="status">이야기를 이어가고 있어요<span>···</span></div>' : ''}</div>
+      : `<div class="message-row ${m.role}" id="${m.id}">${m.role === 'child' ? `<span class="chat-avatar ${c.color}">${escapeHtml(c.name.slice(0, 1))}</span>` : ''}<div>${m.role === 'child' ? `<span class="message-name">${escapeHtml(c.name)}</span>` : ''}<p class="bubble">${m.role === 'child' ? renderChildMessage(m.text) : escapeHtml(m.text)}</p></div></div>`).join('')}${busy ? `<div class="thinking" role="status">${escapeHtml(c.name)}${subjectParticle(c.name)} 입력하고 있어요<span>...</span></div>` : ''}</div>
     ${session.result ? resultPanel() : session.safetyHold ? `<div class="pause-panel"><strong>안전을 먼저 확인해 주세요.</strong><p>실제 상황이라면 게임 대신 필요한 도움을 연결해 주세요.</p><button class="button secondary" data-action="resume">가상 연습으로 돌아가기</button></div>` : `<div class="composer-area"><div class="coach-note">${icon('leaf')}<p>${escapeHtml(session.feedback)}</p></div>
       ${session.plan?.agreed && session.stage === 'plan' ? `<button class="support-button" data-action="support" ${busy ? 'disabled' : ''}>${icon('shield')} 주변 어른의 지원 약속 확인하기 ${icon('arrow')}</button>` : ''}
       <div class="suggestion-head"><button class="hint-toggle" data-action="hints" aria-expanded="${revealHints}">${icon('spark')} 질문 도우미 ${revealHints ? '−' : '+'}</button>${mode === 'demo' ? '<span>데모에서는 예시 질문으로 흐름을 확인해 보세요.</span>' : ''}</div>
