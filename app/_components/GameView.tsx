@@ -4,6 +4,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Action, Message, PublicCase, Session } from '@/lib/types';
 import { displayText } from '@/lib/display-text';
 import { Icon } from './icons';
+import { useDialogueDelivery } from './useDialogueDelivery';
 
 const milestoneLabels: [string, string][] = [['understanding', '마음 파악'], ['empathy', '공감 전달'], ['agreement', '작은 행동 유도'], ['practice', '변화 확인']];
 
@@ -43,8 +44,9 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
   const logRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const mounted = useRef(false);
-  const messages = pendingMessage ? [...session.messages, pendingMessage] : session.messages;
-  const locked = busy || hasPending;
+  const { visible, playing } = useDialogueDelivery(session.sessionId || c.id, session.messages);
+  const messages = pendingMessage ? [...visible, pendingMessage] : visible;
+  const locked = busy || hasPending || playing;
   const completed = milestoneLabels.filter(([key]) => session.milestones[key]).length;
   const learningChecks = session.guidance?.checks ?? milestoneLabels.map(([id, label]) => ({ id, label, done: !!session.milestones[id] }));
   const [lastProgress, setLastProgress] = useState({ turn: session.turns, completed, notes: session.notes.length });
@@ -68,8 +70,8 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
 
   // Return focus to the composer when the session opens and after each reply.
   useEffect(() => {
-    if (!busy) inputRef.current?.focus({ preventScroll: true });
-  }, [busy]);
+    if (!locked) inputRef.current?.focus({ preventScroll: true });
+  }, [locked]);
 
   useEffect(() => {
     if (!highlight) return;
@@ -116,9 +118,9 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
                   {m.role === 'child' && <span className={`chat-avatar ${c.color}`}>{c.name.slice(0, 1)}</span>}
                   <div>{m.role === 'child' && <span className="message-name">{c.name}</span>}<p className="bubble">{m.role === 'child' ? <ChildMessage text={m.text} /> : m.text}</p></div>
                 </div>)}
-            {busy && <div className="thinking" role="status">{c.name}{subjectParticle(c.name)} 입력하고 있어요<span>...</span></div>}
+            {(busy || playing) && <div className="thinking" role="status">{c.name}의 말을 기다리고 있어요.</div>}
           </div>
-          {session.result ? (
+          {session.result && !playing ? (
             <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{displayText(session.result.title)}</h2><p>{displayText(session.result.change)}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}
               {session.result.reflection && <div className="learning-reflection">
                 <h3>내 대화 돌아보기</h3>

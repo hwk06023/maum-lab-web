@@ -24,6 +24,7 @@ export interface Catalog {
 export interface Message {
   id: string;
   role: 'user' | 'child' | 'guide' | 'scene';
+  delivery?: { initiative: boolean };
   text: string;
 }
 
