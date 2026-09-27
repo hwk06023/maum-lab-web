@@ -36,3 +36,5 @@ main.page-width,section.hero.page-width,section.stories.page-width{width:100%}
 html,body,body *{font-family:var(--font-nanum-square)!important}
 html[data-fonts='loading'] body{visibility:hidden}
 .progress-fill-0{width:0}.progress-fill-1{width:25%}.progress-fill-2{width:50%}.progress-fill-3{width:75%}.progress-fill-4{width:100%}
+/* The native top-layer mask covers the viewport, including body gutter padding. */
+.modal::backdrop{position:fixed;inset:0}

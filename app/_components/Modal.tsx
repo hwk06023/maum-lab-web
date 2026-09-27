@@ -1,14 +1,26 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { Icon } from './icons';
 
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
-    // Unmounting removes the dialog from the top layer, so no cleanup is needed.
-    if (el && !el.open) el.showModal();
+    if (!el) return;
+    const body = document.body;
+    const previousOverflow = body.style.overflow;
+    const previousPadding = body.style.paddingRight;
+    // Measure before locking: overlay scrollbars and non-scrolling pages yield 0.
+    const gutter = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+    const padding = parseFloat(getComputedStyle(body).paddingRight) || 0;
+    body.style.overflow = 'hidden';
+    if (gutter > 0) body.style.paddingRight = `${padding + gutter}px`;
+    if (!el.open) el.showModal();
+    return () => {
+      body.style.overflow = previousOverflow;
+      body.style.paddingRight = previousPadding;
+    };
   }, []);
   return (
     <dialog
