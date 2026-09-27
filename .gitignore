@@ -8,3 +8,4 @@ coverage/
 .local/
 content/generated/
 test-results/
+.vercel/
