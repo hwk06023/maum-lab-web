@@ -11,8 +11,9 @@ const loadGame = () => import('./GameView');
 const GameView = dynamic(loadGame, { loading: () => <main id="main" className="game-shell page-width" /> });
 
 type Dialog = { type: 'consent'; caseId: string } | { type: 'guide' } | { type: 'privacy' } | null;
-interface PendingRequest { requestId: string; version: number; action: Action; recoveryToken?: string }
-type ApiError = Error & { status?: number };
+interface PendingRequest { requestId: string; version: number; action: Action; recoveryToken?: string; messages: Message[] }
+const STORAGE_KEY = 'maum-conversation-v2';
+type ApiError = Error & { status?: number; retryable?: boolean };
 
 export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | null }) {
   const [catalog, setCatalog] = useState<Catalog | null>(initialCatalog);
@@ -20,8 +21,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const [filter, setFilter] = useState(0);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [toastText, setToastText] = useState<string | null>(null);
-  // Intentionally page memory, not sessionStorage/localStorage: reload starts fresh.
-  // Keep the last acknowledged state/checkpoint and any unacknowledged request.
+  // Browser-owned transcript + pending request. No server-side session cache.
   const [session, setSessionState] = useState<Session | null>(null);
   const [busy, setBusyState] = useState(false);
   const [pending, setPendingState] = useState<PendingRequest | null>(null);
@@ -31,9 +31,33 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const pendingRef = useRef<PendingRequest | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const setSession = (next: Session | null) => { sessionRef.current = next; setSessionState(next); };
+  const persist = (nextSession: Session | null, nextPending: PendingRequest | null) => {
+    if (!nextSession) { sessionStorage.removeItem(STORAGE_KEY); return; }
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ session: nextSession, pending: nextPending }));
+  };
+  const setSession = (next: Session | null) => { persist(next, pendingRef.current); sessionRef.current = next; setSessionState(next); };
   const setBusy = (next: boolean) => { busyRef.current = next; setBusyState(next); };
-  const setPending = (next: PendingRequest | null) => { pendingRef.current = next; setPendingState(next); };
+  const setPending = (next: PendingRequest | null) => { persist(sessionRef.current, next); pendingRef.current = next; setPendingState(next); };
+
+  useEffect(() => {
+    // sessionStorage normally survives reload. Preserve the requested fresh-start
+    // behavior by clearing once per document, while React remounts recover it.
+    const page = window as Window & { __maumStorageReady?: boolean };
+    try {
+      if (!page.__maumStorageReady) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        page.__maumStorageReady = true;
+      } else {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const value = JSON.parse(saved) as { session: Session; pending: PendingRequest | null };
+          sessionRef.current = value.session; setSessionState(value.session);
+          pendingRef.current = value.pending; setPendingState(value.pending);
+          setPendingMessage(value.pending?.action.kind === 'say' ? { id: 'pending-message', role: 'user', text: value.pending.action.text } : null);
+        }
+      }
+    } catch { setToastText('브라우저의 세션 저장 공간을 사용할 수 없습니다. 저장 권한을 확인해 주세요.'); }
+  }, []);
 
   const toast = useCallback((text: string) => {
     setToastText(text);
@@ -50,10 +74,10 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
       method, credentials: 'same-origin', headers, cache: 'no-store',
       body: body ? JSON.stringify(body) : undefined
     });
-    let data: { error?: string };
+    let data: { error?: string; retryable?: boolean };
     try { data = await response.json(); }
     catch { throw new Error('서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'); }
-    if (!response.ok) throw Object.assign(new Error(data.error || '요청을 완료하지 못했습니다.'), { status: response.status });
+    if (!response.ok) throw Object.assign(new Error(data.error || '요청을 완료하지 못했습니다.'), { status: response.status, retryable: data.retryable });
     return data as T;
   }, []);
 
@@ -99,7 +123,11 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
     const request = pendingRef.current;
     if (busyRef.current || !sessionRef.current || !request) return;
     setBusy(true);
-    const accept = (next: Session) => { setSession(next); setPending(null); setPendingMessage(null); };
+    const accept = (next: Session) => {
+      persist(next, null);
+      sessionRef.current = next; setSessionState(next);
+      pendingRef.current = null; setPendingState(null); setPendingMessage(null);
+    };
     try {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
@@ -107,13 +135,9 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
           break;
         } catch (err) {
           const error = err as ApiError;
-          // A response can be lost after a committed turn. Reconcile first, then
-          // reuse the SAME request ID/checkpoint so retrying cannot append twice.
-          try {
-            const latest = await api<Session>('/api/session');
-            if (latest.version > request.version) { accept(latest); break; }
-          } catch { /* A missing server cache never clears the page transcript. */ }
-          const transient = !error.status || error.status === 401 || error.status === 503 || error.status === 504;
+          // Retry the identical browser-owned base + action. A lost response
+          // cannot append twice because no server state was advanced.
+          const transient = error.retryable !== false && (!error.status || error.status === 503 || error.status === 504);
           if (!attempt && transient) continue;
           toast(error.message);
           break;
@@ -128,7 +152,8 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
     const current = sessionRef.current;
     if (busyRef.current || !current || pendingRef.current) return;
     if (current.turns >= 40) return toast('한 회차의 대화 한도에 도달했습니다. 현재 대화 기록은 그대로 유지됩니다.');
-    setPending({ requestId: crypto.randomUUID(), version: current.version, action, recoveryToken: current.recoveryToken });
+    try { setPending({ requestId: crypto.randomUUID(), version: current.version, action, recoveryToken: current.recoveryToken, messages: current.messages }); }
+    catch { return toast('대화를 브라우저에 저장하지 못했습니다. 저장 공간을 확인해 주세요.'); }
     setPendingMessage(action.kind === 'say' ? { id: 'pending-message', role: 'user', text: action.text } : null);
     await submitPendingRequest();
   }, [submitPendingRequest, toast]);
@@ -136,11 +161,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const goHome = async () => {
     const current = sessionRef.current;
     if (busyRef.current) return toast('응답 처리 후 이동해 주세요.');
-    if (current && current.stage !== 'complete' && !window.confirm('연습을 종료할까요? 서버에 남아 있는 대화 기록이 삭제됩니다.')) return;
-    if (current) {
-      try { await api('/api/session', undefined, 'DELETE'); }
-      catch { /* Explicitly ending the local page session works even offline. */ }
-    }
+    if (current && current.stage !== 'complete' && !window.confirm('연습을 종료할까요? 이 탭에 저장한 대화 기록이 삭제됩니다.')) return;
     setSession(null);
     setPending(null);
     setPendingMessage(null);
@@ -204,12 +225,12 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
       )}
       {dialog?.type === 'guide' && (
         <Modal title="마음연습실, 이렇게 이용해요." onClose={closeDialog}>
-          <div className="guide-steps"><h3>하나의 상담 대화로 끝까지</h3><p>무엇이 싫은지 듣고, 들은 마음을 공감해 주세요. 대신 할 작은 행동 하나를 제안한 뒤 지금 해보도록 격려하면 됩니다.</p><p>마음 파악 · 공감 전달 · 작은 행동 유도 · 변화 확인, 네 가지만 대화로 확인합니다. 별도 연습 장면이나 추가 미션은 없어요. 막히면 진행 힌트에서 다음 말을 참고하세요.</p></div><div className="consent-note">아이의 난이도에 따라 거부감과 말투가 다릅니다. 결과는 가상 시나리오에서 확인한 작은 변화입니다.</div>
+          <div className="guide-steps"><h3>하나의 상담 대화로 끝까지</h3><p>무엇이 싫은지 듣고, 들은 마음을 공감해 주세요. 대신 할 작은 행동 하나를 제안한 뒤 지금 해보도록 격려하면 됩니다.</p><p>마음 파악 · 공감 전달 · 작은 행동 유도 · 변화 확인, 네 가지만 대화로 확인합니다. 별도 연습 장면이나 추가 미션은 없어요. 막히면 진행 힌트에서 다음 말을 참고하세요.</p></div><div className="consent-note">1단계는 마음을 알아보려는 시도, 2단계는 사건과 감정의 연결, 3단계는 핵심 이유에 대한 정확한 이해와 구체적 도움·선택이 필요합니다. 결과는 가상 시나리오에서 확인한 작은 변화입니다.</div>
         </Modal>
       )}
       {dialog?.type === 'privacy' && (
         <Modal title="연습 데이터 안내" onClose={closeDialog}>
-          <div className="guide-steps"><h3>가상 사례만 사용해요</h3><p>성인의 교육·연습용 프로토타입입니다. 실제 아동의 이름, 학교, 연락처, 건강·가족 정보는 입력하지 마세요. 간단한 탐지 규칙은 모든 개인정보를 걸러내지 못합니다.</p><h3>대화의 저장 범위</h3><p>대화와 암호화된 복구 정보는 현재 페이지 메모리에 보관하며 새로고침·종료 시 초기화됩니다. 서버는 마지막 요청부터 최대 1시간 동안 처리용 사본을 메모리에 보관합니다. 서버가 재시작되어도 열린 페이지의 복구 정보로 이어갈 수 있습니다. 이 앱은 대화를 데이터베이스나 분석 로그에 저장하지 않습니다.</p><h3>AI 모드의 외부 전송</h3><p>AI 모드에서는 입력과 대화 맥락이 {aiProviderLabel}로 전송됩니다. 응답 저장을 끄더라도 공급자 측 보관이 전혀 없다는 뜻은 아닙니다. 운영자는 기관의 승인·개인정보 처리·보안 요건을 따로 검토해야 합니다.</p></div>
+          <div className="guide-steps"><h3>가상 사례만 사용해요</h3><p>성인의 교육·연습용 프로토타입입니다. 실제 아동의 이름, 학교, 연락처, 건강·가족 정보는 입력하지 마세요. 간단한 탐지 규칙은 모든 개인정보를 걸러내지 못합니다.</p><h3>대화의 저장 범위</h3><p>대화 전체와 진행 정보, 응답 대기 중인 입력은 이 탭의 sessionStorage에만 보관합니다. 새로고침·연습 종료 시 초기화합니다. 매 요청마다 전체 대화를 서버로 보내며, 서버는 응답 처리 중에만 읽고 이후 세션 메모리·데이터베이스·대화 로그에 보관하지 않습니다. 서버가 재시작되어도 이 탭의 기록으로 이어갑니다.</p><h3>AI 모드의 외부 전송</h3><p>AI 모드에서는 입력과 대화 맥락이 {aiProviderLabel}로 전송됩니다. 응답 저장을 끄더라도 공급자 측 보관이 전혀 없다는 뜻은 아닙니다. 운영자는 기관의 승인·개인정보 처리·보안 요건을 따로 검토해야 합니다.</p></div>
         </Modal>
       )}
     </>
