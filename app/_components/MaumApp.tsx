@@ -124,8 +124,6 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   }, [api, initialCatalog]);
 
   const mode = catalog?.mode ?? 'demo';
-  const aiLabel = catalog?.ai?.model ?? 'AI 파일럿';
-  const aiProviderLabel = catalog?.ai?.label ?? '외부 AI 공급자 API';
 
   const openConsent = useCallback((caseId: string) => {
     void loadGame();
@@ -172,8 +170,8 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
           const error = err as ApiError;
           // Retry the identical browser-owned base + action. A lost response
           // cannot append twice because no server state was advanced.
-          const transient = error.retryable !== false && (!error.status || error.status === 503 || error.status === 504);
-          if (!attempt && transient) continue;
+          const transient = error.retryable !== false && (!error.status || error.status === 502 || error.status === 503 || error.status === 504);
+          if (!attempt && transient) { await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700)); continue; }
           toast(error.message);
           break;
         }
@@ -250,12 +248,12 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
               : <a className="nav-link active" href="#stories">연습실</a>}
             <button className="nav-link" data-intent="guide" onClick={() => setDialog({ type: 'guide' })}>진행 방법</button>
           </nav>
-          <p className="mode-badge">{mode === 'demo' ? '규칙 기반 데모' : aiLabel}</p>
+          {mode === 'demo' && <p className="mode-badge">규칙 기반 데모</p>}
         </div></header>
         {inGame
           ? <GameView
               key={session.sessionId ?? session.case.id}
-              session={session} catalog={catalog.cases} mode={mode} aiProviderLabel={aiProviderLabel}
+              session={session} catalog={catalog.cases}
               busy={busy} hasPending={!!pending} pendingMessage={pendingMessage}
               onAction={sendAction} onRetry={submitPendingRequest} onHome={goHome} onExport={downloadResult} onLearning={() => setDialog({ type: 'learning' })} />
           : <Home catalog={catalog.cases} filter={filter} onFilter={setFilter} onStart={openConsent} onPreload={loadGame} />}
@@ -287,7 +285,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
       )}
       {dialog?.type === 'privacy' && (
         <Modal title="연습 데이터 안내" onClose={closeDialog}>
-          <div className="guide-steps privacy-cards"><section><Icon name="shield" /><div><h3>가상 사례만</h3><p>실제 아이의 이름, 학교, 연락처, 건강, 가족 정보는 입력하지 마세요.</p></div></section><section><Icon name="note" /><div><h3>이 탭에만 보관</h3><p>대화와 대기 중인 입력은 sessionStorage에 저장합니다.<br />새로고침, 연습 종료 시 초기화됩니다.</p></div></section><section><Icon name="chat" /><div><h3>AI로 전송</h3><p>매번 전체 대화를 서버와 {aiProviderLabel}로 보냅니다.<br />자체 서버에는 대화 기록을 남기지 않습니다.<br />AI 공급자의 보관 정책은 별도로 적용됩니다.</p></div></section></div>
+          <div className="guide-steps privacy-cards"><section><Icon name="shield" /><div><h3>가상 사례만</h3><p>실제 아이의 이름, 학교, 연락처, 건강, 가족 정보는 입력하지 마세요.</p></div></section><section><Icon name="note" /><div><h3>이 탭에만 보관</h3><p>대화와 대기 중인 입력은 sessionStorage에 저장합니다.<br />새로고침, 연습 종료 시 초기화됩니다.</p></div></section><section><Icon name="chat" /><div><h3>AI로 전송</h3><p>매번 전체 대화를 서버와 외부 AI로 보냅니다.<br />자체 서버에는 대화 기록을 남기지 않습니다.<br />AI 공급자의 보관 정책은 별도로 적용됩니다.</p></div></section></div>
         </Modal>
       )}
       {dialog?.type === 'learning' && <Modal title="이 연습이 지향하는 것" onClose={closeDialog}><LearningGuide /></Modal>}

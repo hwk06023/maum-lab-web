@@ -23,11 +23,9 @@ function ChildMessage({ text }: { text: string }) {
   return <>{parts.map((part, i) => <Fragment key={i}>{i > 0 && <br />}{part}</Fragment>)}</>;
 }
 
-export default function GameView({ session, catalog, mode, aiProviderLabel, busy, hasPending, pendingMessage, onAction, onRetry, onHome, onExport, onLearning }: {
+export default function GameView({ session, catalog, busy, hasPending, pendingMessage, onAction, onRetry, onHome, onExport, onLearning }: {
   session: Session;
   catalog: PublicCase[];
-  mode: string;
-  aiProviderLabel: string;
   busy: boolean;
   hasPending: boolean;
   pendingMessage: Message | null;
@@ -103,11 +101,6 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
         <section className="conversation" aria-label="아이와 대화">
           <div className="conversation-head">
             <div><strong>{c.name}{subjectParticle(c.name) === '이' ? '과' : '와'}의 대화</strong></div>
-            <div className="conversation-notice" title={mode === 'demo' ? '규칙 기반 데모 / AI 대화 아님' : `가상 AI 대화 / ${aiProviderLabel}로 전송`}>
-              <Icon name="shield" />
-              <p className="notice-full">{mode === 'demo' ? '규칙 기반 데모 / AI 대화 아님' : `가상 AI 대화 / ${aiProviderLabel}로 전송`}</p>
-              <p className="notice-compact">{mode === 'demo' ? '규칙 기반 데모' : `${aiProviderLabel.replace(/ API$/, '')}로 전송`}</p>
-            </div>
             <span>{session.turns} / 40턴</span>
           </div>
           <div className="chat-messages" role="log" aria-label="대화 기록" aria-live="polite" ref={logRef}>
