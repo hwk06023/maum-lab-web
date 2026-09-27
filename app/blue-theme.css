@@ -115,3 +115,11 @@ html,body{word-break:keep-all;overflow-wrap:break-word}
 .conversation-head>div:first-child{max-width:25%}
 .conversation-head>span{margin-left:auto;white-space:nowrap}
 @container(max-width:520px){.conversation-notice .notice-full{display:none}.conversation-notice .notice-compact{display:block}.conversation-head>.conversation-notice{font-size:9px;padding:6px 8px;gap:4px}.conversation-head strong{font-size:12px}}
+/* Hover changes color only; controls and their parent cards remain stationary. */
+@media(hover:hover){
+button:hover,.button:hover,.nav-link:hover,.story-card:hover{transform:none;box-shadow:none}
+.button.primary:hover:not(:disabled),.send-button:hover:not(:disabled),.filter.selected:hover{background:#123d9f;color:#fff}
+.button.secondary:hover:not(:disabled),.card-start:hover:not(:disabled),.hint-toggle:hover,.modal-close:hover,.site-footer button:hover,.filter:hover:not(.selected),.nav-link:hover,.clue-note>button:hover{background:#c8dcff;color:#123d9f;border-color:#a8c6f5}
+.brand:hover{color:#2563eb}
+.checkbox-label:hover{background:#dce9ff;border-color:#9bbdf5}
+}
