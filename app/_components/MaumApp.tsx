@@ -108,10 +108,19 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
     return data as T;
   }, []);
 
-  // Fallback when the server-rendered catalogue was unavailable at render time.
+  // Refresh even when ISR supplied a catalogue: backend releases may add cases
+  // independently of this deployment. Never reset an active conversation.
   useEffect(() => {
-    if (initialCatalog) return;
-    api<Catalog>('/api/cases').then(setCatalog, () => setLoadFailed(true));
+    let cancelled = false;
+    const refresh = () => {
+      if (sessionRef.current) return;
+      api<Catalog>('/api/cases').then(next => {
+        if (!cancelled && !sessionRef.current) { setCatalog(next); setLoadFailed(false); }
+      }, () => { if (!cancelled && !initialCatalog) setLoadFailed(true); });
+    };
+    refresh();
+    window.addEventListener('focus', refresh);
+    return () => { cancelled = true; window.removeEventListener('focus', refresh); };
   }, [api, initialCatalog]);
 
   const mode = catalog?.mode ?? 'demo';
