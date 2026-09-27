@@ -103,7 +103,7 @@ html,body{word-break:keep-all;overflow-wrap:break-word}
 .site-footer>div>span{margin:0}
 @media(max-width:700px){.story-summary>p{min-height:0}.profile-detail{display:none}}
 /* Translucent sticky header; retain an opaque fallback without backdrop filtering. */
-@supports ((backdrop-filter:blur(16px)) or (-webkit-backdrop-filter:blur(16px))){.site-header{background:rgba(255,255,255,.82);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%)}}
+@supports ((backdrop-filter:blur(5px)) or (-webkit-backdrop-filter:blur(5px))){.site-header{background:rgba(255,255,255,.82);backdrop-filter:blur(5px) saturate(140%);-webkit-backdrop-filter:blur(5px) saturate(140%)}}
 .message-row .bubble{padding:5px 15px}
 
 /* The notice is anchored to the header center, independent of either side's width. */
