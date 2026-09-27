@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { Toaster, toast } from 'sonner';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Action, Catalog, Message, Session } from '@/lib/types';
 import { Icon } from './icons';
@@ -21,7 +22,6 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const [filter, setFilter] = useState(0);
   const [headerStuck, setHeaderStuck] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [toastText, setToastText] = useState<string | null>(null);
   // Browser-owned transcript + pending request. No server-side session cache.
   const [session, setSessionState] = useState<Session | null>(null);
   const [busy, setBusyState] = useState(false);
@@ -30,7 +30,31 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const sessionRef = useRef<Session | null>(null);
   const busyRef = useRef(false);
   const pendingRef = useRef<PendingRequest | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const exitIntent = useRef<{ button: EventTarget | null; expires: number } | null>(null);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetExit = useCallback(() => {
+    exitIntent.current = null;
+    if (exitTimer.current) clearTimeout(exitTimer.current);
+    exitTimer.current = null;
+    toast.dismiss('end-practice');
+  }, []);
+
+  useEffect(() => {
+    const cancelOnInteraction = (event: Event) => {
+      const intent = exitIntent.current;
+      if (!intent) return;
+      const sameButton = intent.button instanceof Element && event.target instanceof Node && intent.button.contains(event.target);
+      const activation = event.type === 'pointerdown' || event.type === 'click' ||
+        (event instanceof KeyboardEvent && ['Enter', ' '].includes(event.key));
+      if (!sameButton || !activation) resetExit();
+    };
+    const events = ['pointerdown', 'click', 'keydown', 'input', 'wheel', 'focusin'];
+    events.forEach(name => document.addEventListener(name, cancelOnInteraction, true));
+    return () => {
+      events.forEach(name => document.removeEventListener(name, cancelOnInteraction, true));
+      resetExit();
+    };
+  }, [resetExit]);
 
   useEffect(() => {
     const updateHeader = () => setHeaderStuck(window.scrollY > 0);
@@ -64,15 +88,8 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
           setPendingMessage(value.pending?.action.kind === 'say' ? { id: 'pending-message', role: 'user', text: value.pending.action.text } : null);
         }
       }
-    } catch { setToastText('브라우저의 세션 저장 공간을 사용할 수 없습니다. 저장 권한을 확인해 주세요.'); }
+    } catch { toast('브라우저의 세션 저장 공간을 사용할 수 없습니다. 저장 권한을 확인해 주세요.'); }
   }, []);
-
-  const toast = useCallback((text: string) => {
-    setToastText(text);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToastText(null), 7000);
-  }, []);
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const api = useCallback(async <T,>(path: string, body?: unknown, method = body ? 'POST' : 'GET'): Promise<T> => {
     const headers: Record<string, string> = body ? { 'Content-Type': 'application/json' } : {};
@@ -165,10 +182,27 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
     await submitPendingRequest();
   }, [submitPendingRequest, toast]);
 
-  const goHome = async () => {
+  const goHome = (event?: React.MouseEvent<HTMLButtonElement>) => {
     const current = sessionRef.current;
     if (busyRef.current) return toast('응답 처리 후 이동해 주세요.');
-    if (current && current.stage !== 'complete' && !window.confirm('연습을 종료할까요? 이 탭에 저장한 대화 기록이 삭제됩니다.')) return;
+    if (current && current.stage !== 'complete') {
+      const button = event?.currentTarget ?? null;
+      const intent = exitIntent.current;
+      if (!button || intent?.button !== button || Date.now() >= intent.expires) {
+        resetExit();
+        exitIntent.current = { button, expires: Date.now() + 5000 };
+        exitTimer.current = setTimeout(resetExit, 5000);
+        toast('나가려면 같은 버튼을 한 번 더 눌러주세요.', {
+          id: 'end-practice',
+          description: '5초 안에 다시 누르면 연습과 대화 기록이 종료돼요.',
+          duration: 5000,
+          onDismiss: resetExit,
+          onAutoClose: resetExit,
+        });
+        return;
+      }
+    }
+    resetExit();
     setSession(null);
     setPending(null);
     setPendingMessage(null);
@@ -223,7 +257,13 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   return (
     <>
       <div id="app">{content}</div>
-      <div className="toast" role="status" aria-live="polite" hidden={!toastText}>{toastText}</div>
+      <Toaster position="top-center" theme="light" duration={5000} closeButton
+        containerAriaLabel="알림" toastOptions={{
+          closeButtonAriaLabel: '알림 닫기',
+          style: { background: '#fff', color: '#172b4d', borderColor: '#dfe7f3', borderRadius: '14px' },
+          actionButtonStyle: { background: '#2563eb', color: '#fff' },
+          cancelButtonStyle: { background: '#edf3ff', color: '#184bc0' },
+        }} />
       {dialog?.type === 'consent' && catalog && (
         <ConsentDialog
           name={catalog.cases.find(c => c.id === dialog.caseId)?.name ?? ''}
