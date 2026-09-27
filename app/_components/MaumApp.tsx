@@ -192,7 +192,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
     content = (
       <>
         <header className="site-header"><div className="header-inner">
-          <button className="brand" onClick={goHome} aria-label="마음연습실 홈"><span className="brand-mark">m<span>•</span></span><span>마음연습실<small>MAUM LAB</small></span></button>
+          <button className="brand" onClick={goHome} aria-label="마음연습실 홈"><span className="brand-mark"><Icon name="heartChat" /></span><span className="brand-copy">마음연습실<small>MAUM LAB</small></span></button>
           <nav aria-label="주 메뉴">
             {inGame
               ? <button className="nav-link" onClick={goHome}><Icon name="back" /> 연습실로</button>
