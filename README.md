@@ -1,42 +1,24 @@
-# 마음연습실 웹 — maum-lab-web
+# 마음연습실
 
-성인을 위한 가상 아동 대화 연습 시뮬레이터입니다. 실제 상담·진단·치료 서비스가 아닙니다.
+가상의 학생과 대화하며, 학생의 마음을 듣고 함께 방법을 찾아보는 연습 공간입니다. 선생님을 비롯한 성인이 상담 선생님의 입장에서 이용할 수 있습니다.
 
-Vercel은 이 저장소의 **main**을 Production으로 배포합니다. Next.js(App Router) 앱과 Node.js 24 Route Handler API 프록시로 구성됩니다.
+**[마음연습실 체험하기](https://maum.hyunwoo.ai)**
 
-**[배포 순서 및 환경변수 전체 목록](docs/DEPLOYMENT.md)**
+## 어떻게 이용하나요?
 
-## Vercel 설정
+1. 이야기를 나눌 학생을 고릅니다.
+2. 처음 만난 상담 선생님이 되어 학생에게 말을 건넵니다.
+3. 학생의 반응을 살피며 질문과 도움의 방법을 바꿔봅니다.
+4. 연습이 끝나면 나눈 대화와 결과를 저장하고 돌아봅니다.
 
-- Framework: Next.js (`vercel.json`에 설정됨) / Root Directory: 저장소 루트 / Node.js: 24.x
-- Build: `npm run build` (`next build`)
-- Production 환경변수: `MAUM_BACKEND_URL`, `MAUM_PROXY_SECRET`
-- Vercel의 Git 연동이 main 변경을 자동 배포합니다. 별도 GitHub Vercel 배포 워크플로는 필요하지 않습니다.
+학생은 미리 정해진 답만 고르는 대신, AI를 통해 앞선 대화에 맞춰 반응합니다. 이해와 배려가 쌓이면 경계가 조금씩 풀리고, 모욕이나 위협에는 다시 움츠러들거나 거리를 둘 수 있습니다. 정답을 맞히기보다 여러분의 말이 상대에게 어떻게 들릴지 생각해 보는 것이 목적입니다.
 
-`app/`은 화면(App Router), `app/api/`는 네 가지 API Route Handler, `lib/proxy.mjs`는 Fly API로의 인증된 연결입니다.
+## 이 저장소는 무엇인가요?
 
-### 렌더링 전략
+서비스의 화면을 만드는 파일이 담겨 있습니다. 학생을 선택하는 화면, 대화창, 기록 저장 기능을 담당합니다. 학생의 설정과 답변을 만드는 부분은 [별도 저장소](https://github.com/hwk06023/maum-lab-server)에 있습니다.
 
-- `/`: ISR(60초). 공개 사연 목록을 서버에서 미리 렌더링해 CDN에서 즉시 제공하고, 서버의 페르소나가 바뀌면 백그라운드에서 갱신합니다. 빌드·갱신 시 백엔드에 연결하지 못하면 브라우저가 `/api/cases`로 다시 불러옵니다.
-- 대화 화면: 클라이언트 컴포넌트. 코드 분할되어 사연 카드에 마우스를 올리거나 동의 창을 열 때 미리 불러옵니다.
-- `/api/*`: 동적 Route Handler(Node.js, 최대 60초). API 응답은 캐시하지 않습니다.
+직접 설치하거나 수정하려는 분은 [설치와 배포 안내](docs/DEPLOYMENT.md)를 참고하세요.
 
-로컬에서 데모 백엔드와 연결하려면 `REQUIRE_PROXY_SECRET=true PORT=4100 MAUM_PROXY_SECRET=<32자 이상> SERVE_STATIC=false npm run demo`를 실행한 뒤, `MAUM_BACKEND_URL=http://127.0.0.1:4100 MAUM_PROXY_SECRET=<같은 값> MAUM_ALLOW_LOCAL_BACKEND=1 npm run dev`를 실행합니다. 대화·페이지별 세션 ID·암호화된 서버 복구 정보는 현재 페이지 메모리에서 유지하며 새로고침하면 초기화됩니다. 통신 오류 시 마지막 대화와 미확인 요청을 유지하고 같은 요청 ID로 재시도합니다. API 키나 읽을 수 있는 내부 페르소나 정보는 브라우저로 보내지 않습니다.
+## 이용 전 알아두세요
 
-## 서버와 콘텐츠 작업
-
-배포용 서버는 별도 저장소 [maum-lab-server](https://github.com/hwk06023/maum-lab-server)의 main입니다. **새 페르소나·사연·모델 프롬프트·서버 기능은 서버 저장소에서 수정합니다.**
-
-이 저장소의 `src/`, `legacy-web/`(이전 정적 화면), `prompts/`, `content/`, Dockerfile 및 기존 엔진 테스트는 원본의 로컬 데모/회귀 검사 자료로 남아 있습니다. Vercel 배포 경로에서 사용하지 않으며 Fly의 최신 상태와 자동 동기화되지 않습니다. `npm run demo`는 이 독립 로컬 데모를 실행합니다. 실제 분리 배포를 확인할 때는 Vercel 프로젝트와 별도 서버를 사용합니다.
-
-## 검증
-
-```sh
-npm run check
-npm test
-npm run build
-```
-
-런타임 의존성은 `next`, `react`, `react-dom`입니다. 기존 33개 검사와 프록시 9개 검사를 포함합니다. 서버리스 함수 교체 후 세션 유지, 쿠키, 출처 검증, 비밀값 보호, 요청 크기 제한 및 장애 응답을 확인합니다. 실제 Vercel/Fly 배포는 소유자의 계정 연결과 환경변수 등록 이후 검증합니다.
-
-GitHub 업로드 이전의 v0.1.0 QA 자료 및 스크린샷은 `docs/QA.md`에 기록되어 있습니다. 현재 배포 절차는 `docs/DEPLOYMENT.md`가 기준입니다.
+모든 학생과 상황은 교육용으로 만든 가상 사례입니다. 실제 상담이나 진단을 대신하지 않으며, AI의 반응이 실제 학생의 행동을 예측하는 것은 아닙니다. 실제 학생의 이름이나 연락처 등 개인정보는 입력하지 마세요. 새로고침하거나 연습을 종료하면 대화가 초기화되므로 필요한 기록은 미리 저장하세요.
