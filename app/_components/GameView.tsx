@@ -101,7 +101,7 @@ export default function GameView({ session, catalog, busy, hasPending, pendingMe
         <section className="conversation" aria-label="아이와 대화">
           <div className="conversation-head">
             <div><strong>{c.name}{subjectParticle(c.name) === '이' ? '과' : '와'}의 대화</strong></div>
-            <span>{session.turns} / 40턴</span>
+            <span>{session.turns}턴</span>
           </div>
           <div className="chat-messages" role="log" aria-label="대화 기록" aria-live="polite" ref={logRef}>
             <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{displayText(c.brief)}</p><p className="scenario-role">나의 역할 / 오늘 처음 만난 상담 선생님</p></div>

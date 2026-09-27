@@ -184,7 +184,6 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const sendAction = useCallback(async (action: Action) => {
     const current = sessionRef.current;
     if (busyRef.current || !current || pendingRef.current) return;
-    if (current.turns >= 40) return toast('한 회차의 대화 한도에 도달했습니다. 현재 대화 기록은 그대로 유지됩니다.');
     try { setPending({ requestId: crypto.randomUUID(), version: current.version, action, recoveryToken: current.recoveryToken, messages: current.messages }); }
     catch { return toast('대화를 브라우저에 저장하지 못했습니다. 저장 공간을 확인해 주세요.'); }
     setPendingMessage(action.kind === 'say' ? { id: 'pending-message', role: 'user', text: action.text } : null);
