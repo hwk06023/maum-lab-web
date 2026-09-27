@@ -103,7 +103,8 @@ html,body{word-break:keep-all;overflow-wrap:break-word}
 .site-footer>div>span{margin:0}
 @media(max-width:700px){.story-summary>p{min-height:0}.profile-detail{display:none}}
 /* Translucent sticky header; retain an opaque fallback without backdrop filtering. */
-@supports ((backdrop-filter:blur(5px)) or (-webkit-backdrop-filter:blur(5px))){.site-header{background:rgba(255,255,255,.82);backdrop-filter:blur(5px) saturate(140%);-webkit-backdrop-filter:blur(5px) saturate(140%)}}
+.site-header{background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+html{scroll-behavior:smooth;scroll-padding-top:96px}
 .message-row .bubble{padding:5px 15px}
 
 /* The notice is anchored to the header center, independent of either side's width. */
@@ -123,3 +124,18 @@ button:hover,.button:hover,.nav-link:hover,.story-card:hover{transform:none;box-
 .brand:hover{color:#2563eb}
 .checkbox-label:hover{background:#dce9ff;border-color:#9bbdf5}
 }
+/* Related learning evidence stays compact, with a separate space for reflection. */
+.learning-guide,.learning-card,.learning-reflection,.reflection-evidence{display:flex;flex-direction:column;min-width:0}
+.learning-guide,.learning-reflection{gap:14px;width:100%}
+.learning-card{gap:7px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+.learning-card h3,.learning-card h4{margin:0;font-size:13px;color:var(--ink)}
+.learning-card p,.reflection-scope{margin:0;font-size:12px;line-height:1.8;color:var(--muted)}
+.learning-card a,.learning-card button{align-self:flex-start;background:#e5efff;color:#184bc0;border:0;border-radius:7px;padding:8px 10px;font-size:11px;text-align:left;transition:background-color 200ms ease,color 200ms ease}
+.learning-card a:hover,.learning-card button:hover{background:#bfd5ff;color:#123d9f;transform:none}
+.learning-reflection{margin-top:24px;text-align:left}
+.learning-reflection>h3{font-size:16px;margin:0}
+.reflection-evidence{gap:10px}
+.reflection-evidence .learning-card{background:#fff}
+.reflection-scope{padding:12px;background:#e5efff;border-radius:10px}
+.learning-guide>.small-note{margin:0}
+.site-footer>.footer-actions{flex-direction:row;flex-wrap:wrap;gap:8px}

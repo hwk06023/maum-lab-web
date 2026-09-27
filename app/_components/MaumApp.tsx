@@ -7,11 +7,12 @@ import type { Action, Catalog, Message, Session } from '@/lib/types';
 import { Icon } from './icons';
 import { Home } from './Home';
 import { Modal } from './Modal';
+import { LearningGuide } from './LearningGuide';
 
 const loadGame = () => import('./GameView');
 const GameView = dynamic(loadGame, { loading: () => <main id="main" className="game-shell page-width" /> });
 
-type Dialog = { type: 'consent'; caseId: string } | { type: 'guide' } | { type: 'privacy' } | null;
+type Dialog = { type: 'consent'; caseId: string } | { type: 'guide' } | { type: 'privacy' } | { type: 'learning' } | null;
 interface PendingRequest { requestId: string; version: number; action: Action; recoveryToken?: string; messages: Message[] }
 const STORAGE_KEY = 'maum-conversation-v2';
 type ApiError = Error & { status?: number; retryable?: boolean };
@@ -212,13 +213,14 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const downloadResult = () => {
     const s = sessionRef.current;
     if (!s) return;
-    const result = { project: '마음연습실', version: '0.1.0', mode: s.mode, case: s.case,
-      result: s.result, milestones: s.milestones, notes: s.notes };
+    const result = { project: '마음연습실', version: '0.2.0', exportedAt: new Date().toISOString(), mode: s.mode, case: s.case,
+      result: s.result, milestones: s.milestones, notes: s.notes,
+      messages: s.messages.map((message, index) => ({ order: index + 1, ...message })) };
     const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url; a.download = `maum-${s.case.id}-result.json`; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast('대화 전문을 제외한 가상 연습 결과를 저장했습니다.');
+    toast('전체 대화와 연습 결과를 저장했습니다.');
   };
 
   const inGame = !!session && !!catalog;
@@ -247,9 +249,9 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
               key={session.sessionId ?? session.case.id}
               session={session} catalog={catalog.cases} mode={mode} aiProviderLabel={aiProviderLabel}
               busy={busy} hasPending={!!pending} pendingMessage={pendingMessage}
-              onAction={sendAction} onRetry={submitPendingRequest} onHome={goHome} onExport={downloadResult} />
+              onAction={sendAction} onRetry={submitPendingRequest} onHome={goHome} onExport={downloadResult} onLearning={() => setDialog({ type: 'learning' })} />
           : <Home catalog={catalog.cases} filter={filter} onFilter={setFilter} onStart={openConsent} onPreload={loadGame} />}
-        <footer className="site-footer"><div><strong>마음연습실</strong><span>대화로 시작하는 변화.</span></div><p>성인 교육용 / 가상 사례<br />실제 상담, 진단을 대신하지 않습니다.</p><button data-intent="privacy" onClick={() => setDialog({ type: 'privacy' })}>데이터 안내 <Icon name="arrow" /></button></footer>
+        <footer className="site-footer"><div><strong>마음연습실</strong><span>대화로 시작하는 변화.</span></div><p>성인 교육용 / 가상 사례<br />실제 상담, 진단을 대신하지 않습니다.</p><div className="footer-actions"><button onClick={() => setDialog({ type: 'learning' })}>교육적 설계와 자료</button><button data-intent="privacy" onClick={() => setDialog({ type: 'privacy' })}>데이터 안내 <Icon name="arrow" /></button></div></footer>
       </>
     );
   }
@@ -272,7 +274,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
       )}
       {dialog?.type === 'guide' && (
         <Modal title="이렇게 연습해요" onClose={closeDialog}>
-          <div className="guide-steps"><section><span>01</span><div><h3>마음 듣기</h3><p>무엇이 싫은지 물어보세요.</p></div></section><section><span>02</span><div><h3>공감하기</h3><p>들은 마음을 짧게 되짚어 주세요.</p></div></section><section><span>03</span><div><h3>행동 제안</h3><p>대신 할 작은 행동을 함께 정해요.</p></div></section><section><span>04</span><div><h3>변화 확인</h3><p>지금 해보도록 격려해 주세요.</p></div></section></div><div className="consent-note"><strong>레벨별 차이</strong><p>1 관심과 질문<br />2 사건과 감정 연결<br />3 정확한 이해와 구체적 도움</p></div><p className="small-note">4턴 동안 진전이 없으면 입력창 위에 ‘힌트’가 나타나요.</p>
+          <div className="guide-steps"><section><span>01</span><div><h3>마음 듣기</h3><p>추측하기보다 관찰하고 물어보세요.</p></div></section><section><span>02</span><div><h3>공감하기</h3><p>들은 마음을 짧게 되짚어 주세요.</p></div></section><section><span>03</span><div><h3>행동 제안</h3><p>작은 행동과 어른의 도움을 함께 정해요.</p></div></section><section><span>04</span><div><h3>변화 확인</h3><p>한 번 시도하고 내 대화도 돌아봐요.</p></div></section></div><div className="consent-note"><strong>서로 다른 연습 상황</strong><p>1 부담과 도움<br />2 경계와 차례<br />3 안전과 선택</p></div><p className="small-note">4턴 동안 진전이 없으면 입력창 위에 ‘힌트’가 나타나요.</p>
         </Modal>
       )}
       {dialog?.type === 'privacy' && (
@@ -280,6 +282,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
           <div className="guide-steps privacy-cards"><section><Icon name="shield" /><div><h3>가상 사례만</h3><p>실제 아이의 이름, 학교, 연락처, 건강, 가족 정보는 입력하지 마세요.</p></div></section><section><Icon name="note" /><div><h3>이 탭에만 보관</h3><p>대화와 대기 중인 입력은 sessionStorage에 저장합니다.<br />새로고침, 연습 종료 시 초기화됩니다.</p></div></section><section><Icon name="chat" /><div><h3>AI로 전송</h3><p>매번 전체 대화를 서버와 {aiProviderLabel}로 보냅니다.<br />자체 서버에는 대화 기록을 남기지 않습니다.<br />AI 공급자의 보관 정책은 별도로 적용됩니다.</p></div></section></div>
         </Modal>
       )}
+      {dialog?.type === 'learning' && <Modal title="이 연습이 지향하는 것" onClose={closeDialog}><LearningGuide /></Modal>}
     </>
   );
 }

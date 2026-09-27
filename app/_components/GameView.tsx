@@ -22,7 +22,7 @@ function ChildMessage({ text }: { text: string }) {
   return <>{parts.map((part, i) => <Fragment key={i}>{i > 0 && <br />}{part}</Fragment>)}</>;
 }
 
-export default function GameView({ session, catalog, mode, aiProviderLabel, busy, hasPending, pendingMessage, onAction, onRetry, onHome, onExport }: {
+export default function GameView({ session, catalog, mode, aiProviderLabel, busy, hasPending, pendingMessage, onAction, onRetry, onHome, onExport, onLearning }: {
   session: Session;
   catalog: PublicCase[];
   mode: string;
@@ -34,6 +34,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
   onRetry: () => void;
   onHome: () => void;
   onExport: () => void;
+  onLearning: () => void;
 }) {
   const c = session.case;
   const [hintsOpen, setHintsOpen] = useState(false);
@@ -45,6 +46,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
   const messages = pendingMessage ? [...session.messages, pendingMessage] : session.messages;
   const locked = busy || hasPending;
   const completed = milestoneLabels.filter(([key]) => session.milestones[key]).length;
+  const learningChecks = session.guidance?.checks ?? milestoneLabels.map(([id, label]) => ({ id, label, done: !!session.milestones[id] }));
   const [lastProgress, setLastProgress] = useState({ turn: session.turns, completed, notes: session.notes.length });
   const progressed = completed > lastProgress.completed || session.notes.length > lastProgress.notes;
   const hintAvailable = !progressed && session.turns - lastProgress.turn >= 4;
@@ -117,7 +119,16 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
             {busy && <div className="thinking" role="status">{c.name}{subjectParticle(c.name)} 입력하고 있어요<span>...</span></div>}
           </div>
           {session.result ? (
-            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{displayText(session.result.title)}</h2><p>{displayText(session.result.change)}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}<p className="result-disclaimer">{displayText(session.result.disclaimer)}</p>
+            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{displayText(session.result.title)}</h2><p>{displayText(session.result.change)}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}
+              {session.result.reflection && <div className="learning-reflection">
+                <h3>내 대화 돌아보기</h3>
+                <div className="reflection-evidence">{session.result.reflection.evidence.map(item => <div className="learning-card" key={item.label}><h4>{item.label}</h4><p>{displayText(item.text)}</p><button onClick={() => showEvidence(item.messageId)}>대화에서 보기</button></div>)}</div>
+                <div className="learning-card"><h4>잠깐 생각해 보기</h4><p>{displayText(session.result.reflection.question)}</p></div>
+                <div className="learning-card"><h4>다음 만남에는</h4><p>{displayText(session.result.reflection.nextStep)}</p>{session.result.reflection.supportToConsider && <p>더 생각할 지원: {displayText(session.result.reflection.supportToConsider)}</p>}</div>
+                <p className="reflection-scope">{displayText(session.result.reflection.scope)}</p>
+                <button className="button secondary" onClick={onLearning}>교육적 설계와 자료</button>
+              </div>}
+              <p className="result-disclaimer">{displayText(session.result.disclaimer)}</p>
               <div className="result-actions"><button className="button primary" onClick={onExport}><Icon name="download" /> 결과 저장</button><button className="button secondary" onClick={onHome}>다른 아이 만나기</button></div>
             </section>
           ) : session.safetyHold ? (
@@ -143,12 +154,12 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
           )}
         </section>
         <aside className="notebook">
-          <div className="notebook-title"><Icon name="note" /><h2>마음 단서 노트</h2><span>{session.notes.length}개</span></div>
+          <div className="notebook-title"><Icon name="note" /><h2>대화에서 확인한 말</h2><span>{session.notes.length}개</span></div>
           <div className="notes-list">{session.notes.length ? session.notes.map(note => (
             <article key={note.id} className="clue-note"><span>아이의 말</span><h3>{displayText(note.label)}</h3><p>{displayText(note.text)}</p><button onClick={() => showEvidence(note.evidence.childTurnId)}>대화 보기 <Icon name="arrow" /></button></article>
           )) : <div className="empty-note"><Icon name="note" /><p>대화하며 마음을 발견해요.</p></div>}</div>
-          <div className="milestones"><h3>함께 확인할 변화</h3>{milestoneLabels.map(([key, label]) => (
-            <div key={key} className={session.milestones[key] ? 'achieved' : ''}><span>{session.milestones[key] && <Icon name="check" />}</span>{label}</div>
+          <div className="milestones"><h3>이번에 연습할 것</h3>{learningChecks.map(({ id, label, done }) => (
+            <div key={id} className={done ? 'achieved' : ''}><span>{done && <Icon name="check" />}</span>{label}</div>
           ))}</div>
         </aside>
       </div>
