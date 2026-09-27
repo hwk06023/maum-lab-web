@@ -22,7 +22,7 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
       </div><div className="hero-art" aria-hidden="true">
         <div className="art-ring"></div>
         <div className="floating-label top-label"><Icon name="chat" /> 어떤 순간이 어려웠어?</div>
-        <div className="story-paper"><span className="paper-kicker">오늘의 마음 노트</span><div className="paper-lines"><span></span><span></span></div><div className="paper-sprout"><Icon name="leaf" /></div><p>듣고, 이해하고,<br /><strong>함께 자라기.</strong></p><span className="paper-number">01 — 06</span></div>
+        <div className="story-paper"><span className="paper-kicker">오늘의 마음 노트</span><div className="paper-lines"><span></span><span></span></div><div className="paper-sprout"><Icon name="leaf" /></div><p>듣고, 이해하고,<br /><strong>함께 자라기.</strong></p><span className="paper-number">01 — {String(catalog.length).padStart(2, '0')}</span></div>
         <div className="floating-label bottom-label"><Icon name="spark" /> 조금씩, 함께</div>
       </div></section>
       <section className="journey page-width" aria-label="연습 과정">{['마음 듣기', '공감하기', '행동 제안', '변화 확인'].map((step, i) => <div key={step}><span>{String(i + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</section>
