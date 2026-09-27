@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
+import 'sonner/dist/styles.css';
 import './globals.css';
 import './blue-theme.css';
 
