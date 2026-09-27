@@ -115,7 +115,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
             <div className="pause-panel"><strong>안전을 먼저 확인해 주세요.</strong><p>실제 상황이라면 게임 대신 필요한 도움을 연결해 주세요.</p><button className="button secondary" onClick={() => onAction({ kind: 'resume' })}>가상 연습으로 돌아가기</button></div>
           ) : (
             <div className="composer-area">
-              {hintAvailable && <div className="context-hint"><button className="hint-toggle" onClick={() => setHintsOpen(open => !open)} aria-expanded={hintsOpen} aria-controls={hintsOpen ? 'conversation-hints' : undefined}>힌트</button>{hintsOpen && <p id="conversation-hints" role="status">{session.guidance?.hint || session.feedback}</p>}</div>}
+              <div className={`context-hint${hintAvailable ? ' is-available' : ''}${hintAvailable && hintsOpen ? ' is-expanded' : ''}`} aria-hidden={!hintAvailable} inert={!hintAvailable}><button className="hint-toggle" onClick={() => setHintsOpen(open => !open)} aria-expanded={hintAvailable && hintsOpen} aria-controls="conversation-hints">힌트</button><p id="conversation-hints" aria-hidden={!hintAvailable || !hintsOpen}>{session.guidance?.hint || session.feedback}</p></div>
               {hasPending && !busy && <button className="support-button" onClick={onRetry}>기록은 그대로 · 응답 다시 받기</button>}
               <form className="composer" onSubmit={event => { event.preventDefault(); send(); }}>
                 <label className="sr-only" htmlFor="message-input">{c.name}에게 할 말</label>

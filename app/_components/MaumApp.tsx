@@ -113,7 +113,6 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
       setPending(null);
       setPendingMessage(null);
       setSession(next);
-      setDialog(null);
       window.scrollTo({ top: 0, behavior: 'instant' });
       return null;
     } catch (e) { return (e as Error).message; }
@@ -242,14 +241,16 @@ function ConsentDialog({ name, demo, onClose, onSubmit }: {
 }) {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [finished, setFinished] = useState(false);
   return (
-    <Modal title={`${name}의 이야기를 시작할까요?`} onClose={onClose}>
+    <Modal title={`${name}의 이야기를 시작할까요?`} onClose={onClose} closeRequested={finished}>
       <div className="consent-note"><strong>당신은 상담자입니다.</strong><p>가상의 아이와 대화하며 작은 변화를 이끌어보세요. 성인 교육용이며 실제 상담·진단이 아닙니다.</p></div>
       <form onSubmit={async event => {
         event.preventDefault();
         setSubmitting(true);
         const message = await onSubmit(new FormData(event.currentTarget).has('consent'));
         if (message) { setError(message); setSubmitting(false); }
+        else setFinished(true);
       }}>
         <label className="checkbox-label"><input type="checkbox" name="consent" required /><span>실제 개인정보 없이, 가상 사례만 입력할게요.</span></label>
         {demo && <p className="small-note">규칙 기반 데모 · AI 호출 없음</p>}
