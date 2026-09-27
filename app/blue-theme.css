@@ -38,3 +38,9 @@ html[data-fonts='loading'] body{visibility:hidden}
 .progress-fill-0{width:0}.progress-fill-1{width:25%}.progress-fill-2{width:50%}.progress-fill-3{width:75%}.progress-fill-4{width:100%}
 /* The native top-layer mask covers the viewport, including body gutter padding. */
 .modal::backdrop{position:fixed;inset:0}
+/* Consistent thin scrollbars, including nested logs, dialogs and textareas. */
+*,*::before,*::after{scrollbar-width:thin;scrollbar-color:#b9cbea transparent}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#b9cbea;border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:#88a6d2}
