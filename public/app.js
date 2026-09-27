@@ -90,7 +90,7 @@ function subjectParticle(name) {
 function renderChildMessage(text) {
   const descriptions = [];
   const dialogue = text.replace(/\([^()]+\)|（[^（）]+）|\*[^*\n]+\*/g, description => {
-    descriptions.push(`<em class="bubble-description">*${escapeHtml(description.slice(1, -1).trim())}*</em>`);
+    descriptions.push(`<em class="bubble-description">${escapeHtml(description.slice(1, -1).trim())}</em>`);
     return '';
   }).trim();
   return [...descriptions, ...(dialogue ? [escapeHtml(dialogue)] : [])].join('<br>');
