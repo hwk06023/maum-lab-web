@@ -97,7 +97,15 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
           <div className="persona-tip"><Icon name="leaf" /><p>한 번에 하나씩 물어봐요.</p></div>
         </aside>
         <section className="conversation" aria-label="아이와 대화">
-          <div className="conversation-head"><div><strong>{c.name}{subjectParticle(c.name) === '이' ? '과' : '와'}의 대화</strong></div><span>{session.turns} / 40턴</span></div>
+          <div className="conversation-head">
+            <div><strong>{c.name}{subjectParticle(c.name) === '이' ? '과' : '와'}의 대화</strong></div>
+            <div className="conversation-notice" title={mode === 'demo' ? '규칙 기반 데모 / AI 대화 아님' : `가상 AI 대화 / ${aiProviderLabel}로 전송`}>
+              <Icon name="shield" />
+              <p className="notice-full">{mode === 'demo' ? '규칙 기반 데모 / AI 대화 아님' : `가상 AI 대화 / ${aiProviderLabel}로 전송`}</p>
+              <p className="notice-compact">{mode === 'demo' ? '규칙 기반 데모' : `${aiProviderLabel.replace(/ API$/, '')}로 전송`}</p>
+            </div>
+            <span>{session.turns} / 40턴</span>
+          </div>
           <div className="chat-messages" role="log" aria-label="대화 기록" aria-live="polite" ref={logRef}>
             <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{displayText(c.brief)}</p><p className="scenario-role">나의 역할 / 상담자</p></div>
             {messages.map(m => m.role === 'guide' || m.role === 'scene'
@@ -144,7 +152,6 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
           ))}</div>
         </aside>
       </div>
-      <div className="game-bottom-note"><Icon name="shield" />{mode === 'demo' ? '규칙 기반 데모 / AI 대화 아님' : `가상 AI 대화 / ${aiProviderLabel}로 전송`}</div>
     </main>
   );
 }

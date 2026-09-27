@@ -105,3 +105,13 @@ html,body{word-break:keep-all;overflow-wrap:break-word}
 /* Translucent sticky header; retain an opaque fallback without backdrop filtering. */
 @supports ((backdrop-filter:blur(16px)) or (-webkit-backdrop-filter:blur(16px))){.site-header{background:rgba(255,255,255,.82);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%)}}
 .message-row .bubble{padding:5px 15px}
+
+/* The notice is anchored to the header center, independent of either side's width. */
+.conversation-head{position:relative;container-type:inline-size}
+.conversation-head>.conversation-notice{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border-radius:9px;background:#edf3ff;color:#7186a5;font-size:10px;line-height:1.5;white-space:nowrap}
+.conversation-notice .icon{width:12px;height:12px}
+.conversation-notice p{margin:0}
+.conversation-notice .notice-compact{display:none}
+.conversation-head>div:first-child{max-width:25%}
+.conversation-head>span{margin-left:auto;white-space:nowrap}
+@container(max-width:520px){.conversation-notice .notice-full{display:none}.conversation-notice .notice-compact{display:block}.conversation-head>.conversation-notice{font-size:9px;padding:6px 8px;gap:4px}.conversation-head strong{font-size:12px}}
