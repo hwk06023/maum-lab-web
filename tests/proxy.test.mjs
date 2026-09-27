@@ -77,7 +77,8 @@ test('preview domains work without weakening browser origin validation', async (
 test('proxy rejects unknown routes, methods and oversized bodies', async () => {
   assert.equal((await proxy(request('/api/admin'))).status, 404);
   assert.equal((await proxy(request('/api/cases', { method: 'DELETE' }))).status, 405);
-  assert.equal((await proxy(request('/api/turn', { method: 'POST', body: { text: 'a'.repeat(9000) } }))).status, 413);
+  assert.equal((await proxy(request('/api/session', { method: 'POST', body: { pad: 'a'.repeat(9000) } }))).status, 413);
+  assert.equal((await proxy(request('/api/turn', { method: 'POST', body: { text: 'a'.repeat(513 * 1024) } }))).status, 413);
   assert.equal((await proxy(new Request(site + '/api/turn', { method: 'POST', headers: { origin: site }, body: 'plain text' }))).status, 415);
 });
 test('only the session cookie and configured secret reach the backend', async () => {
