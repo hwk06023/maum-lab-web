@@ -72,6 +72,17 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
     setDialog({ type: 'consent', caseId });
   }, []);
 
+  // Replay a tap that happened before hydration (see the inline script in layout.tsx).
+  useEffect(() => {
+    const w = window as Window & { __maumReady?: boolean; __maumIntent?: string };
+    w.__maumReady = true;
+    const intent = w.__maumIntent;
+    delete w.__maumIntent;
+    if (!intent || !catalog) return;
+    if (intent === 'guide' || intent === 'privacy') setDialog({ type: intent });
+    else if (intent.startsWith('case:') && catalog.cases.some(c => c.id === intent.slice(5))) openConsent(intent.slice(5));
+  }, [catalog, openConsent]);
+
   const startSession = async (caseId: string, consent: boolean): Promise<string | null> => {
     try {
       const next = await api<Session>('/api/session', { caseId, consent, pageSession: true });
@@ -165,7 +176,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
             {inGame
               ? <button className="nav-link" onClick={goHome}><Icon name="back" /> 연습실로</button>
               : <a className="nav-link active" href="#stories">연습실 둘러보기</a>}
-            <button className="nav-link" onClick={() => setDialog({ type: 'guide' })}>진행 방법</button>
+            <button className="nav-link" data-intent="guide" onClick={() => setDialog({ type: 'guide' })}>진행 방법</button>
           </nav>
           <span className="mode-badge"><span></span>{mode === 'demo' ? '규칙 기반 데모' : aiLabel}</span>
         </div></header>
@@ -176,7 +187,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
               busy={busy} hasPending={!!pending} pendingMessage={pendingMessage}
               onAction={sendAction} onRetry={submitPendingRequest} onHome={goHome} onExport={downloadResult} />
           : <Home catalog={catalog.cases} filter={filter} onFilter={setFilter} onStart={openConsent} onPreload={loadGame} />}
-        <footer className="site-footer"><div><strong>마음연습실</strong><span>이해에서 시작되는 작은 변화.</span></div><p>성인 교육·연습용 프로토타입 · 모든 사연은 창작입니다.<br />공식 기관 인증이나 실제 상담·치료 효과를 표시하지 않습니다.</p><button onClick={() => setDialog({ type: 'privacy' })}>데이터 안내</button></footer>
+        <footer className="site-footer"><div><strong>마음연습실</strong><span>이해에서 시작되는 작은 변화.</span></div><p>성인 교육·연습용 프로토타입 · 모든 사연은 창작입니다.<br />공식 기관 인증이나 실제 상담·치료 효과를 표시하지 않습니다.</p><button data-intent="privacy" onClick={() => setDialog({ type: 'privacy' })}>데이터 안내</button></footer>
       </>
     );
   }

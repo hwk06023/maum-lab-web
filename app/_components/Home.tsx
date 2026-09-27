@@ -44,7 +44,7 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
                 <div className="persona-line"><span className="persona-dot"></span><strong>{c.name}</strong><span>만 {c.age}세 · {c.gender}</span></div>
                 <h3>{c.title}</h3><p>{c.subtitle}</p>
                 <span className="skill-tag"><Icon name="leaf" />{c.skill}</span>
-                <button className="card-start" aria-label={`${c.name}의 이야기 만나기`} onClick={() => onStart(c.id)} onPointerEnter={onPreload} onFocus={onPreload}>이야기 만나기 <Icon name="arrow" /></button>
+                <button className="card-start" data-intent={`case:${c.id}`} aria-label={`${c.name}의 이야기 만나기`} onClick={() => onStart(c.id)} onPointerEnter={onPreload} onFocus={onPreload}>이야기 만나기 <Icon name="arrow" /></button>
               </div>
             </article>
           ))}

@@ -19,6 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body>
         <a className="skip-link" href="#main">본문으로 건너뛰기</a>
+        {/* The home page is prerendered, so buttons can be tapped before React hydrates.
+            Remember the last such intent; MaumApp replays it once interactive. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.addEventListener('click',function(e){if(window.__maumReady)return;var b=e.target.closest&&e.target.closest('[data-intent]');if(b)window.__maumIntent=b.getAttribute('data-intent')},true)" }} />
         {children}
         <noscript>이 연습실을 이용하려면 JavaScript를 켜 주세요.</noscript>
       </body>
