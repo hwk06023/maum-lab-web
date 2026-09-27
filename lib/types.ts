@@ -2,6 +2,7 @@ export interface PublicCase {
   id: string;
   name: string;
   age: number;
+  schoolLevel?: string;
   gender: string;
   level: number;
   color: string;

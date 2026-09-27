@@ -41,7 +41,7 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
             <article key={c.id} className={`story-card ${c.color}`}>
               <div className="card-visual"><span className="level-badge">LEVEL {String(c.level).padStart(2, '0')}</span><span className="visual-orbit"></span><Icon name={c.motif} className="motif" /><span className="card-index">{String(catalog.indexOf(c) + 1).padStart(2, '0')}</span></div>
               <div className="card-body">
-                <div className="persona-line"><strong>{c.name}</strong><span>만 {c.age}세 / {c.gender}</span></div>
+                <div className="persona-line"><strong>{c.name}</strong><span>{c.schoolLevel ? `${c.schoolLevel} / ` : ""}만 {c.age}세</span></div>
                 <div className="story-summary"><h3>{displayText(c.title)}</h3><p>{displayText(c.subtitle)}</p></div>
                 <span className="skill-tag"><Icon name="leaf" />{c.skill}</span>
                 <button className="card-start" data-intent={`case:${c.id}`} aria-label={`${c.name}의 이야기 만나기`} onClick={() => onStart(c.id)} onPointerEnter={onPreload} onFocus={onPreload}>이야기 만나기 <Icon name="arrow" /></button>

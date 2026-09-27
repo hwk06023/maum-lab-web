@@ -23,7 +23,7 @@ const fontReadyScript = `(()=>{if(!document.fonts)return;const root=document.doc
 
 export const metadata: Metadata = {
   title: '마음연습실 / 이해에서 시작되는 작은 변화',
-  description: '서로 다른 여섯 아이의 이야기를 듣고, 작은 변화를 함께 연습하는 가상 대화 시뮬레이터.',
+  description: '초등학생부터 고등학생까지, 서로 다른 이야기를 듣고 작은 변화를 함께 연습하는 가상 대화 시뮬레이터.',
   robots: { index: false, follow: false },
   icons: { icon: { url: '/favicon.svg', type: 'image/svg+xml' } }
 };

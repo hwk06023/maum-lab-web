@@ -95,7 +95,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
       <div className="game-grid">
         <aside className={`persona-panel ${c.color}`}>
           <div className="persona-art"><Icon name={c.motif} className="motif" /><span>STORY {String(catalog.findIndex(x => x.id === c.id) + 1).padStart(2, '0')}</span></div>
-          <div className="persona-info"><span className="level-pill">LEVEL {c.level}</span><h1>{c.name}의 이야기</h1><p className="persona-age">만 {c.age}세 / {c.gender}</p><h2>{displayText(c.title)}</h2><div className="profile-detail"><span>좋아하는 것</span><strong>{displayText(c.interest)}</strong></div><div className="profile-detail"><span>아이의 강점</span><strong>{displayText(c.strength)}</strong></div></div>
+          <div className="persona-info"><span className="level-pill">LEVEL {c.level}</span><h1>{c.name}의 이야기</h1><p className="persona-age">{c.schoolLevel ? `${c.schoolLevel} / ` : ""}만 {c.age}세</p><h2>{displayText(c.title)}</h2><div className="profile-detail"><span>좋아하는 것</span><strong>{displayText(c.interest)}</strong></div><div className="profile-detail"><span>아이의 강점</span><strong>{displayText(c.strength)}</strong></div></div>
           <div className="persona-tip"><Icon name="leaf" /><p>한 번에 하나씩 물어봐요.</p></div>
         </aside>
         <section className="conversation" aria-label="아이와 대화">
