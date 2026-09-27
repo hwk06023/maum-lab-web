@@ -43,7 +43,11 @@ export async function createApp(options = {}) {
   const port = Number(options.port ?? process.env.PORT ?? 3000);
   const origin = options.origin ?? process.env.APP_ORIGIN ?? `http://localhost:${port}`;
   if (!/^https?:\/\/[^/]+$/.test(origin)) throw new Error('APP_ORIGIN must be an origin without a trailing slash');
-  const secure = origin.startsWith('https://');
+  const secure = options.secureCookies ?? (process.env.COOKIE_SECURE === 'true' || origin.startsWith('https://'));
+  const proxySecret = options.proxySecret ?? process.env.MAUM_PROXY_SECRET ?? '';
+  const requireProxy = options.requireProxy ?? (process.env.REQUIRE_PROXY_SECRET === 'true');
+  const serveStatic = options.serveStatic ?? (process.env.SERVE_STATIC !== 'false');
+  if ((requireProxy || proxySecret) && proxySecret.length < 32) throw new Error('MAUM_PROXY_SECRET must contain at least 32 characters');
   const mode = options.mode ?? process.env.LLM_MODE ?? 'demo';
   if (!['demo', 'live'].includes(mode)) throw new Error('LLM_MODE must be demo or live');
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
@@ -77,7 +81,13 @@ export async function createApp(options = {}) {
     try {
       const url = new URL(req.url, origin);
       const method = req.method ?? 'GET';
-      if (['POST', 'DELETE', 'PUT', 'PATCH'].includes(method) && req.headers.origin !== origin)
+      const publicHealth = url.pathname === '/api/health' && method === 'GET';
+      const trustedProxy = Boolean(proxySecret) && typeof req.headers['x-maum-proxy-secret'] === 'string'
+        && safeEqual(req.headers['x-maum-proxy-secret'], proxySecret);
+      if (proxySecret && url.pathname.startsWith('/api/') && !publicHealth && !trustedProxy)
+        throw fail(403, '허용되지 않은 서버 연결입니다.');
+      // The authenticated web proxy checks browser Origin before forwarding.
+      if (!trustedProxy && ['POST', 'DELETE', 'PUT', 'PATCH'].includes(method) && req.headers.origin !== origin)
         throw fail(403, '허용되지 않은 출처의 요청입니다.');
       if (url.pathname === '/api/health' && method === 'GET') return json(200, { ok: true, version: '0.1.0', mode });
       if (url.pathname === '/api/cases' && method === 'GET') return json(200, {
@@ -139,7 +149,7 @@ export async function createApp(options = {}) {
           return json(200, view);
         } finally { session.busy = false; }
       }
-      if (method === 'GET' && assets.has(url.pathname)) {
+      if (serveStatic && method === 'GET' && assets.has(url.pathname)) {
         const [file, mime] = assets.get(url.pathname);
         const data = await readFile(path.join(ROOT, 'public', file));
         res.writeHead(200, { 'Content-Type': mime });
