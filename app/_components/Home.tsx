@@ -1,7 +1,7 @@
 import type { PublicCase } from '@/lib/types';
 import { Icon } from './icons';
 
-const FILTERS: [number, string][] = [[0, '전체 이야기'], [1, 'Lv.1 마음 알아보기'], [2, 'Lv.2 관계 이해하기'], [3, 'Lv.3 함께 바꾸기']];
+const FILTERS: [number, string][] = [[0, '전체'], [1, 'Lv.1 쉬움'], [2, 'Lv.2 보통'], [3, 'Lv.3 어려움']];
 
 export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
   catalog: PublicCase[];
@@ -14,27 +14,26 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
   return (
     <main id="main">
       <section className="hero page-width" aria-labelledby="hero-title"><div className="hero-copy">
-        <p className="eyebrow"><span className="eyebrow-line"></span>아이의 세계를 이해하는 대화 연습</p>
-        <h1 id="hero-title">아이를 바꾸기 전에,<br /><em>이야기를 들어볼까요?</em></h1>
-        <p className="hero-description">같은 행동에도 서로 다른 마음이 있어요.<br />여섯 아이의 이야기를 듣고, 작은 변화를 함께 연습해 보세요.</p>
-        <a className="button primary" href="#stories">첫 번째 이야기 만나기 <Icon name="arrow" /></a>
-        <p className="hero-footnote"><Icon name="shield" /> 가상의 아이와 연습하는 안전한 시작</p>
+        <p className="eyebrow"><span className="eyebrow-line"></span>마음을 이해하는 대화 연습</p>
+        <h1 id="hero-title">대화로 여는<br /><em>작은 변화.</em></h1>
+        <div className="hero-summary"><p className="hero-description">아이의 마음을 듣고,<br />함께 다음 행동을 찾아요.</p><p className="hero-footnote"><Icon name="shield" /> 성인을 위한 가상 상담</p></div>
+        <a className="button primary" href="#stories">연습 시작하기 <Icon name="arrow" /></a>
       </div><div className="hero-art" aria-hidden="true">
         <div className="art-ring"></div><span className="art-dot dot-one"></span><span className="art-dot dot-two"></span>
         <div className="floating-label top-label"><Icon name="chat" /> 어떤 순간이 어려웠어?</div>
         <div className="story-paper"><span className="paper-kicker">오늘의 마음 노트</span><div className="paper-lines"><span></span><span></span></div><div className="paper-sprout"><Icon name="leaf" /></div><p>듣고, 이해하고,<br /><strong>함께 자라기.</strong></p><span className="paper-number">01 — 06</span></div>
-        <div className="floating-label bottom-label"><Icon name="spark" /> 작은 변화가 시작되는 곳</div>
+        <div className="floating-label bottom-label"><Icon name="spark" /> 조금씩, 함께</div>
       </div></section>
-      <section className="journey page-width" aria-label="연습 과정"><div><span>01</span><div><strong>하나의 상담 대화</strong><p>마음을 파악하고 공감하며, 작은 행동을 이끌어 변화까지 확인해요.</p></div></div></section>
+      <section className="journey page-width" aria-label="연습 과정">{['마음 듣기', '공감하기', '행동 제안', '변화 확인'].map((step, i) => <div key={step}><span>{String(i + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</section>
       <section id="stories" className="stories page-width" aria-labelledby="stories-title">
-        <div className="section-heading"><div><p className="eyebrow">SIX STORIES, SMALL STEPS</p><h2 id="stories-title">오늘은 누구의 이야기를 들어볼까요?</h2><p>단계가 올라갈수록 대화 거부와 감정 반응이 강한 상황을 연습해요.</p></div><span className="story-count">{cases.length}<small>개의 이야기</small></span></div>
+        <div className="section-heading"><div><p className="eyebrow">오늘의 연습</p><h2 id="stories-title">누구와 이야기할까요?</h2></div><span className="story-count">{cases.length}<small>개의 이야기</small></span></div>
         <div className="filter-row">
           <div className="filters" role="group" aria-label="난이도 선택">
             {FILTERS.map(([id, text]) => (
               <button key={id} className={`filter ${filter === id ? 'selected' : ''}`} aria-pressed={filter === id} onClick={() => onFilter(id)}>{text}</button>
             ))}
           </div>
-          <span className="filter-note">각 단계 남아 1명 · 여아 1명</span>
+          <span className="filter-note">레벨이 높을수록 깊은 이해가 필요해요.</span>
         </div>
         <div className="card-grid">
           {cases.map(c => (
@@ -49,7 +48,7 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
             </article>
           ))}
         </div>
-        <div className="principle-note"><Icon name="note" /><p><strong>정답을 말하는 것보다, 함께 방법을 찾는 연습.</strong><br />진단명을 맞히거나 아이를 복종시키는 게임이 아니에요. 질문하고, 확인하고, 실행 가능한 도움을 만들어 보세요.</p></div>
+        <div className="principle-note"><Icon name="note" /><p><strong>정답보다 이해.</strong> 아이의 말에서 다음 대화를 찾아요.</p></div>
       </section>
     </main>
   );

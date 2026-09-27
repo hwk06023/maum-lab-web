@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import './blue-theme.css';
 
 export const metadata: Metadata = {
   title: '마음연습실 · 이해에서 시작되는 작은 변화',
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#163f35'
+  themeColor: '#2563eb'
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

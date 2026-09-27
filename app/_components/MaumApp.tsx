@@ -186,8 +186,8 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   let content: React.ReactNode;
   if (!catalog) {
     content = loadFailed
-      ? <main id="main" className="loading"><h1>연습실을 준비하고 있어요.</h1><p>지금은 서버에 연결할 수 없습니다. 잠시 후 페이지를 새로고침해 주세요.</p></main>
-      : <main id="main" className="loading"><p>마음연습실을 준비하고 있어요.</p></main>;
+      ? <main id="main" className="loading"><div className="loading-card"><Icon name="chat" /><h1>잠시 연결이 끊겼어요.</h1><p>새로고침 후 다시 시작해 주세요.</p></div></main>
+      : <main id="main" className="loading"><div className="loading-card"><Icon name="chat" /><p>연습실을 준비하고 있어요.</p></div></main>;
   } else {
     content = (
       <>
@@ -196,7 +196,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
           <nav aria-label="주 메뉴">
             {inGame
               ? <button className="nav-link" onClick={goHome}><Icon name="back" /> 연습실로</button>
-              : <a className="nav-link active" href="#stories">연습실 둘러보기</a>}
+              : <a className="nav-link active" href="#stories">연습실</a>}
             <button className="nav-link" data-intent="guide" onClick={() => setDialog({ type: 'guide' })}>진행 방법</button>
           </nav>
           <span className="mode-badge"><span></span>{mode === 'demo' ? '규칙 기반 데모' : aiLabel}</span>
@@ -208,7 +208,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
               busy={busy} hasPending={!!pending} pendingMessage={pendingMessage}
               onAction={sendAction} onRetry={submitPendingRequest} onHome={goHome} onExport={downloadResult} />
           : <Home catalog={catalog.cases} filter={filter} onFilter={setFilter} onStart={openConsent} onPreload={loadGame} />}
-        <footer className="site-footer"><div><strong>마음연습실</strong><span>이해에서 시작되는 작은 변화.</span></div><p>성인 교육·연습용 프로토타입 · 모든 사연은 창작입니다.<br />공식 기관 인증이나 실제 상담·치료 효과를 표시하지 않습니다.</p><button data-intent="privacy" onClick={() => setDialog({ type: 'privacy' })}>데이터 안내</button></footer>
+        <footer className="site-footer"><div><strong>마음연습실</strong><span>대화로 시작하는 변화.</span></div><p>성인 교육용 · 가상 사례<br />실제 상담·진단을 대신하지 않습니다.</p><button data-intent="privacy" onClick={() => setDialog({ type: 'privacy' })}>데이터 안내 <Icon name="arrow" /></button></footer>
       </>
     );
   }
@@ -224,13 +224,13 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
           onSubmit={consent => startSession(dialog.caseId, consent)} />
       )}
       {dialog?.type === 'guide' && (
-        <Modal title="마음연습실, 이렇게 이용해요." onClose={closeDialog}>
-          <div className="guide-steps"><h3>하나의 상담 대화로 끝까지</h3><p>무엇이 싫은지 듣고, 들은 마음을 공감해 주세요. 대신 할 작은 행동 하나를 제안한 뒤 지금 해보도록 격려하면 됩니다.</p><p>마음 파악 · 공감 전달 · 작은 행동 유도 · 변화 확인, 네 가지만 대화로 확인합니다. 별도 연습 장면이나 추가 미션은 없어요. 막히면 진행 힌트에서 다음 말을 참고하세요.</p></div><div className="consent-note">1단계는 마음을 알아보려는 시도, 2단계는 사건과 감정의 연결, 3단계는 핵심 이유에 대한 정확한 이해와 구체적 도움·선택이 필요합니다. 결과는 가상 시나리오에서 확인한 작은 변화입니다.</div>
+        <Modal title="이렇게 연습해요" onClose={closeDialog}>
+          <div className="guide-steps"><section><span>01</span><div><h3>마음 듣기</h3><p>무엇이 싫은지 물어보세요.</p></div></section><section><span>02</span><div><h3>공감하기</h3><p>들은 마음을 짧게 되짚어 주세요.</p></div></section><section><span>03</span><div><h3>행동 제안</h3><p>대신 할 작은 행동을 함께 정해요.</p></div></section><section><span>04</span><div><h3>변화 확인</h3><p>지금 해보도록 격려해 주세요.</p></div></section></div><div className="consent-note"><strong>레벨별 차이</strong><p>1 관심과 질문 · 2 사건과 감정 연결 · 3 정확한 이해와 구체적 도움</p></div><p className="small-note">4턴 동안 진전이 없으면 입력창 위에 ‘힌트’가 나타나요.</p>
         </Modal>
       )}
       {dialog?.type === 'privacy' && (
         <Modal title="연습 데이터 안내" onClose={closeDialog}>
-          <div className="guide-steps"><h3>가상 사례만 사용해요</h3><p>성인의 교육·연습용 프로토타입입니다. 실제 아동의 이름, 학교, 연락처, 건강·가족 정보는 입력하지 마세요. 간단한 탐지 규칙은 모든 개인정보를 걸러내지 못합니다.</p><h3>대화의 저장 범위</h3><p>대화 전체와 진행 정보, 응답 대기 중인 입력은 이 탭의 sessionStorage에만 보관합니다. 새로고침·연습 종료 시 초기화합니다. 매 요청마다 전체 대화를 서버로 보내며, 서버는 응답 처리 중에만 읽고 이후 세션 메모리·데이터베이스·대화 로그에 보관하지 않습니다. 서버가 재시작되어도 이 탭의 기록으로 이어갑니다.</p><h3>AI 모드의 외부 전송</h3><p>AI 모드에서는 입력과 대화 맥락이 {aiProviderLabel}로 전송됩니다. 응답 저장을 끄더라도 공급자 측 보관이 전혀 없다는 뜻은 아닙니다. 운영자는 기관의 승인·개인정보 처리·보안 요건을 따로 검토해야 합니다.</p></div>
+          <div className="guide-steps privacy-cards"><section><Icon name="shield" /><div><h3>가상 사례만</h3><p>실제 아이의 이름·학교·연락처·건강·가족 정보는 입력하지 마세요.</p></div></section><section><Icon name="note" /><div><h3>이 탭에만 보관</h3><p>대화와 대기 중인 입력은 sessionStorage에 저장합니다. 새로고침·연습 종료 시 초기화됩니다.</p></div></section><section><Icon name="chat" /><div><h3>AI로 전송</h3><p>매번 전체 대화를 서버와 {aiProviderLabel}로 보냅니다. 자체 서버에는 대화 기록을 남기지 않습니다. AI 공급자의 보관 정책은 별도로 적용됩니다.</p></div></section></div>
         </Modal>
       )}
     </>
@@ -243,20 +243,19 @@ function ConsentDialog({ name, demo, onClose, onSubmit }: {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   return (
-    <Modal title="한 걸음, 천천히 시작해요." onClose={onClose}>
-      <p className="dialog-intro">{name}의 이야기를 만나기 전에</p>
-      <div className="consent-note">교사·보호자 등 성인을 위한 가상 대화 연습입니다. 모든 캐릭터와 사연은 창작이며, 실제 상담이나 진단을 제공하지 않습니다.</div>
+    <Modal title={`${name}의 이야기를 시작할까요?`} onClose={onClose}>
+      <div className="consent-note"><strong>당신은 상담자입니다.</strong><p>가상의 아이와 대화하며 작은 변화를 이끌어보세요. 성인 교육용이며 실제 상담·진단이 아닙니다.</p></div>
       <form onSubmit={async event => {
         event.preventDefault();
         setSubmitting(true);
         const message = await onSubmit(new FormData(event.currentTarget).has('consent'));
         if (message) { setError(message); setSubmitting(false); }
       }}>
-        <label className="checkbox-label"><input type="checkbox" name="consent" required /><span>가상의 사례만 입력하며, 실제 아이의 이름·학교·연락처 등 개인정보는 입력하지 않겠습니다.</span></label>
-        {demo && <p className="small-note">현재는 규칙 기반 데모입니다. LLM API를 호출하지 않습니다.</p>}
-        <p className="small-note">대화는 현재 페이지를 사용하는 동안 유지됩니다. 새로고침하거나 연습을 종료하면 초기화됩니다.</p>
+        <label className="checkbox-label"><input type="checkbox" name="consent" required /><span>실제 개인정보 없이, 가상 사례만 입력할게요.</span></label>
+        {demo && <p className="small-note">규칙 기반 데모 · AI 호출 없음</p>}
+        <p className="small-note">새로고침하거나 연습을 종료하면 대화가 초기화돼요.</p>
         <p className="form-error" role="alert">{error}</p>
-        <button className="button primary full-width" type="submit" disabled={submitting}>이야기 시작하기 <Icon name="arrow" /></button>
+        <button className="button primary full-width" type="submit" disabled={submitting}>{submitting ? '준비하고 있어요' : '이야기 시작하기'} <Icon name="arrow" /></button>
       </form>
     </Modal>
   );
