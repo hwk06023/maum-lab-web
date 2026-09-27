@@ -25,7 +25,7 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
         <div className="story-paper"><span className="paper-kicker">오늘의 마음 노트</span><div className="paper-lines"><span></span><span></span></div><div className="paper-sprout"><Icon name="leaf" /></div><p>듣고, 이해하고,<br /><strong>함께 자라기.</strong></p><span className="paper-number">01 — 06</span></div>
         <div className="floating-label bottom-label"><Icon name="spark" /> 작은 변화가 시작되는 곳</div>
       </div></section>
-      <section className="journey page-width" aria-label="연습 과정"><div><span>01</span><div><strong>이야기 듣기</strong><p>질문 속에서 상황의 단서를 찾아요.</p></div></div><i></i><div><span>02</span><div><strong>방법 함께 찾기</strong><p>아이와 어른이 할 일을 함께 정해요.</p></div></div><i></i><div><span>03</span><div><strong>작은 변화 연습하기</strong><p>다른 상황에서도 방법을 써봐요.</p></div></div></section>
+      <section className="journey page-width" aria-label="연습 과정"><div><span>01</span><div><strong>마음 알아보기</strong><p>아이의 말에서 마음 단서를 찾아요.</p></div></div><i></i><div><span>02</span><div><strong>방법 함께 정하기</strong><p>아이와 어른이 할 일을 함께 정해요.</p></div></div><i></i><div><span>03</span><div><strong>변화 확인</strong><p>같은 대화에서 한 번 시도해 봐요.</p></div></div></section>
       <section id="stories" className="stories page-width" aria-labelledby="stories-title">
         <div className="section-heading"><div><p className="eyebrow">SIX STORIES, SMALL STEPS</p><h2 id="stories-title">오늘은 누구의 이야기를 들어볼까요?</h2><p>단계가 올라갈수록 대화 거부와 감정 반응이 강한 상황을 연습해요.</p></div><span className="story-count">{cases.length}<small>개의 이야기</small></span></div>
         <div className="filter-row">

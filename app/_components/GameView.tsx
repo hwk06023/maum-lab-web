@@ -4,9 +4,9 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Action, Message, PublicCase, Session } from '@/lib/types';
 import { Icon } from './icons';
 
-const stageLabels = ['이야기 듣기', '함께 정하기', '연습하기', '다른 상황', '변화 기록'];
-const stages = ['listen', 'plan', 'rehearse', 'transfer', 'complete'];
-const milestoneLabels: [string, string][] = [['understanding', '상황의 맥락 이해'], ['agreement', '아이와 방법 합의'], ['support', '주변 어른의 지원 확인'], ['practice', '첫 장면에서 연습'], ['transfer', '다른 장면에 적용']];
+const stageLabels = ['마음 알아보기', '방법 함께 정하기', '변화 확인'];
+const stages = ['listen', 'plan', 'rehearse'];
+const milestoneLabels: [string, string][] = [['understanding', '마음 알아보기'], ['agreement', '방법 함께 정하기'], ['practice', '변화 확인']];
 
 function subjectParticle(name: string) {
   const last = name.charCodeAt(name.length - 1);
@@ -46,7 +46,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
   const revealHints = c.level === 1 || hintsOpen;
   const messages = pendingMessage ? [...session.messages, pendingMessage] : session.messages;
   const locked = busy || hasPending;
-  const index = stages.indexOf(session.stage);
+  const index = session.stage === 'complete' ? stages.length : session.stage === 'transfer' ? 2 : Math.max(0, stages.indexOf(session.stage));
 
   // Keep the newest message in view. The first paint jumps; later updates glide.
   useLayoutEffect(() => {
@@ -107,7 +107,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
             {busy && <div className="thinking" role="status">{c.name}{subjectParticle(c.name)} 입력하고 있어요<span>...</span></div>}
           </div>
           {session.result ? (
-            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{session.result.title}</h2><p>{session.result.change}</p><p className="result-disclaimer">{session.result.disclaimer}</p>
+            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{session.result.title}</h2><p>{session.result.change}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}<p className="result-disclaimer">{session.result.disclaimer}</p>
               <div className="result-actions"><button className="button primary" onClick={onExport}><Icon name="download" /> 연습 결과 저장</button><button className="button secondary" onClick={onHome}>다른 이야기 만나기</button></div>
             </section>
           ) : session.safetyHold ? (
@@ -115,14 +115,14 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
           ) : (
             <div className="composer-area">
               <div className="coach-note"><Icon name="leaf" /><p>{session.feedback}</p></div>
-              {session.plan?.agreed && session.stage === 'plan' && (
-                <button className="support-button" onClick={() => onAction({ kind: 'support' })} disabled={busy}><Icon name="shield" /> 주변 어른의 지원 약속 확인하기 <Icon name="arrow" /></button>
-              )}
-              <div className="suggestion-head"><button className="hint-toggle" onClick={() => setHintsOpen(open => !open)} aria-expanded={revealHints}><Icon name="spark" /> 질문 도우미 {revealHints ? '−' : '+'}</button>{mode === 'demo' && <span>데모에서는 예시 질문으로 흐름을 확인해 보세요.</span>}</div>
+              <div className="suggestion-head"><button className="hint-toggle" onClick={() => setHintsOpen(open => !open)} aria-expanded={revealHints}><Icon name="spark" /> 진행 힌트 {revealHints ? '−' : '+'}</button>{mode === 'demo' && <span>데모에서는 예시 질문으로 흐름을 확인해 보세요.</span>}</div>
               {revealHints && (
+                <>
+                {session.guidance && <section className="milestones" aria-label="현재 진행 조건"><h3>{session.guidance.title}</h3>{session.guidance.checks.map(item => <div key={item.id} className={item.done ? 'achieved' : ''}><span aria-label={item.done ? '완료' : '미완료'}>{item.done && <Icon name="check" />}</span>{item.label}</div>)}<p className="notebook-intro">{session.guidance.hint}</p></section>}
                 <div className="suggestions">{session.suggestions.map((s, i) => (
-                  <button key={i} disabled={busy} onClick={() => { setDraft(s); inputRef.current?.focus(); }}>{s}</button>
+                  <button key={i} disabled={locked} onClick={() => { setDraft(s); inputRef.current?.focus(); }}>{s}</button>
                 ))}</div>
+                </>
               )}
               {hasPending && !busy && <button className="support-button" onClick={onRetry}>대화는 유지되어 있어요. 응답 다시 받기</button>}
               <form className="composer" onSubmit={event => { event.preventDefault(); send(); }}>
@@ -142,18 +142,15 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
           )}
         </section>
         <aside className="notebook">
-          <div className="notebook-title"><Icon name="note" /><h2>마음 단서 노트</h2><span>{session.notes.length}/3</span></div>
-          <p className="notebook-intro">추측이 아닌, 대화로 확인한 사실을 모아요.</p>
-          <div className="notes-list">{[0, 1, 2].map(i => {
-            const note = session.notes[i];
-            return note
-              ? <article key={i} className="clue-note"><span>단서 {String(i + 1).padStart(2, '0')} · 확인됨</span><h3>{note.label}</h3><p>{note.text}</p><button onClick={() => showEvidence(note.evidence.childTurnId)}>대화 근거 보기 <Icon name="arrow" /></button></article>
-              : <div key={i} className="empty-note"><span>0{i + 1}</span><p>아직 발견하지 못한 단서<br /><small>대화를 통해 한 걸음씩 알아가요.</small></p></div>;
-          })}</div>
+          <div className="notebook-title"><Icon name="note" /><h2>마음 단서 노트</h2><span>{session.notes.length}개</span></div>
+          <p className="notebook-intro">아이의 실제 응답에서 확인한 단서예요. 하나를 알아내면 다음 단계로 넘어가요.</p>
+          <div className="notes-list">{session.notes.length ? session.notes.map(note => (
+            <article key={note.id} className="clue-note"><span>대화에서 확인됨</span><h3>{note.label}</h3><p>{note.text}</p><button onClick={() => showEvidence(note.evidence.childTurnId)}>대화 근거 보기 <Icon name="arrow" /></button></article>
+          )) : <div className="empty-note"><p>대화에서 마음 단서를 확인하면<br /><small>아이의 말이 여기에 기록돼요.</small></p></div>}</div>
           <div className="milestones"><h3>작은 변화까지</h3>{milestoneLabels.map(([key, label]) => (
             <div key={key} className={session.milestones[key] ? 'achieved' : ''}><span>{session.milestones[key] && <Icon name="check" />}</span>{label}</div>
           ))}</div>
-          <p className="simulation-note">게임의 진행 조건입니다.<br />실제 심리 상태를 측정하지 않습니다.</p>
+          <p className="simulation-note">한 대화 안에서 세 단계를 진행해요.<br />막히면 진행 힌트에서 다음 말을 확인하세요.</p>
         </aside>
       </div>
       <div className="game-bottom-note"><Icon name="shield" />{mode === 'demo' ? '규칙 기반 데모 · 반응과 재연은 작성된 시나리오 분기입니다. AI 대화가 아닙니다.' : `AI 파일럿 · 입력은 ${aiProviderLabel}로 전송됩니다. 결과는 가상 연습에만 해당합니다.`}</div>

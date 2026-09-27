@@ -46,9 +46,10 @@ export interface Session {
   messages: Message[];
   notes: Note[];
   suggestions: string[];
+  guidance?: { title: string; hint: string; checks: { id: string; label: string; done: boolean }[]; examples: string[] };
   plan: { text: string; agreed: boolean } | null;
   milestones: Record<string, boolean>;
-  result: { title: string; change: string; disclaimer: string } | null;
+  result: { title: string; change: string; finalResponse?: string; disclaimer: string } | null;
 }
 
 export type Action = { kind: 'say'; text: string } | { kind: 'support' } | { kind: 'resume' };
