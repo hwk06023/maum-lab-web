@@ -8,6 +8,7 @@ import { Icon } from './icons';
 import { Home } from './Home';
 import { Modal } from './Modal';
 import { LearningGuide } from './LearningGuide';
+import { buildResultExport } from '@/lib/result-export.mjs';
 
 const loadGame = () => import('./GameView');
 const GameView = dynamic(loadGame, { loading: () => <main id="main" className="game-shell page-width" /> });
@@ -213,9 +214,7 @@ export default function MaumApp({ initialCatalog }: { initialCatalog: Catalog | 
   const downloadResult = () => {
     const s = sessionRef.current;
     if (!s) return;
-    const result = { project: '마음연습실', version: '0.2.0', exportedAt: new Date().toISOString(), mode: s.mode, case: s.case,
-      result: s.result, milestones: s.milestones, notes: s.notes,
-      messages: s.messages.map((message, index) => ({ order: index + 1, ...message })) };
+    const result = buildResultExport(s);
     const url = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url; a.download = `maum-${s.case.id}-result.json`; a.click();
