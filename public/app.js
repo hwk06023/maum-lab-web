@@ -40,7 +40,9 @@ async function api(path, body, method = body ? 'POST' : 'GET') {
     method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined
   });
-  const data = await response.json();
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error('서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'); }
   if (!response.ok) throw Object.assign(new Error(data.error || '요청을 완료하지 못했습니다.'), { status: response.status });
   return data;
 }
@@ -227,5 +229,5 @@ try {
   try { session = await api('/api/session'); } catch (e) { if (e.status !== 401) toast(e.message); }
   if (session) renderGame(); else renderHome();
 } catch {
-  app.innerHTML = '<main id="main" class="loading"><h1>연습실에 연결하지 못했습니다.</h1><p>서버 실행 상태를 확인하고 페이지를 새로고침해 주세요.</p></main>';
+  app.innerHTML = '<main id="main" class="loading"><h1>연습실을 준비하고 있어요.</h1><p>지금은 서버에 연결할 수 없습니다. 잠시 후 페이지를 새로고침해 주세요.</p></main>';
 }
