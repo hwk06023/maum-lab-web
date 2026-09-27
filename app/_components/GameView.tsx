@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Action, Message, PublicCase, Session } from '@/lib/types';
+import { displayText } from '@/lib/display-text';
 import { Icon } from './icons';
 
 const milestoneLabels: [string, string][] = [['understanding', '마음 파악'], ['empathy', '공감 전달'], ['agreement', '작은 행동 유도'], ['practice', '변화 확인']];
@@ -13,7 +14,7 @@ function subjectParticle(name: string) {
 
 function ChildMessage({ text }: { text: string }) {
   const parts: React.ReactNode[] = [];
-  const dialogue = text.replace(/\([^()]+\)|（[^（）]+）|\*[^*\n]+\*/g, description => {
+  const dialogue = displayText(text).replace(/\([^()]+\)|（[^（）]+）|\*[^*\n]+\*/g, description => {
     parts.push(<em className="bubble-description">{description.slice(1, -1).trim()}</em>);
     return '';
   }).trim();
@@ -92,15 +93,15 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
       <div className="game-grid">
         <aside className={`persona-panel ${c.color}`}>
           <div className="persona-art"><Icon name={c.motif} className="motif" /><span>STORY {String(catalog.findIndex(x => x.id === c.id) + 1).padStart(2, '0')}</span></div>
-          <div className="persona-info"><span className="level-pill">LEVEL {c.level}</span><h1>{c.name}의 이야기</h1><p className="persona-age">만 {c.age}세 · {c.gender}</p><h2>{c.title}</h2><div className="profile-detail"><span>좋아하는 것</span><strong>{c.interest}</strong></div><div className="profile-detail"><span>아이의 강점</span><strong>{c.strength}</strong></div></div>
+          <div className="persona-info"><span className="level-pill">LEVEL {c.level}</span><h1>{c.name}의 이야기</h1><p className="persona-age">만 {c.age}세 / {c.gender}</p><h2>{displayText(c.title)}</h2><div className="profile-detail"><span>좋아하는 것</span><strong>{displayText(c.interest)}</strong></div><div className="profile-detail"><span>아이의 강점</span><strong>{displayText(c.strength)}</strong></div></div>
           <div className="persona-tip"><Icon name="leaf" /><p>한 번에 하나씩 물어봐요.</p></div>
         </aside>
         <section className="conversation" aria-label="아이와 대화">
-          <div className="conversation-head"><div><span className="status-dot"></span><strong>{c.name}{subjectParticle(c.name) === '이' ? '과' : '와'}의 대화</strong></div><span>{session.turns} / 40턴</span></div>
+          <div className="conversation-head"><div><strong>{c.name}{subjectParticle(c.name) === '이' ? '과' : '와'}의 대화</strong></div><span>{session.turns} / 40턴</span></div>
           <div className="chat-messages" role="log" aria-label="대화 기록" aria-live="polite" ref={logRef}>
-            <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{c.brief}</p><p className="scenario-role">나의 역할 · 상담자</p></div>
+            <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{displayText(c.brief)}</p><p className="scenario-role">나의 역할 / 상담자</p></div>
             {messages.map(m => m.role === 'guide' || m.role === 'scene'
-              ? <div key={m.id} className={`message-${m.role}${highlight === m.id ? ' highlight' : ''}`} id={m.id}><Icon name={m.role === 'scene' ? 'spark' : 'note'} /><p>{m.text}</p></div>
+              ? <div key={m.id} className={`message-${m.role}${highlight === m.id ? ' highlight' : ''}`} id={m.id}><Icon name={m.role === 'scene' ? 'spark' : 'note'} /><p>{displayText(m.text)}</p></div>
               : <div key={m.id} className={`message-row ${m.role}${highlight === m.id ? ' highlight' : ''}`} id={m.id}>
                   {m.role === 'child' && <span className={`chat-avatar ${c.color}`}>{c.name.slice(0, 1)}</span>}
                   <div>{m.role === 'child' && <span className="message-name">{c.name}</span>}<p className="bubble">{m.role === 'child' ? <ChildMessage text={m.text} /> : m.text}</p></div>
@@ -108,15 +109,15 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
             {busy && <div className="thinking" role="status">{c.name}{subjectParticle(c.name)} 입력하고 있어요<span>...</span></div>}
           </div>
           {session.result ? (
-            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{session.result.title}</h2><p>{session.result.change}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}<p className="result-disclaimer">{session.result.disclaimer}</p>
+            <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p><h2>{displayText(session.result.title)}</h2><p>{displayText(session.result.change)}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}<p className="result-disclaimer">{displayText(session.result.disclaimer)}</p>
               <div className="result-actions"><button className="button primary" onClick={onExport}><Icon name="download" /> 결과 저장</button><button className="button secondary" onClick={onHome}>다른 아이 만나기</button></div>
             </section>
           ) : session.safetyHold ? (
             <div className="pause-panel"><strong>안전을 먼저 확인해 주세요.</strong><p>실제 상황이라면 게임 대신 필요한 도움을 연결해 주세요.</p><button className="button secondary" onClick={() => onAction({ kind: 'resume' })}>가상 연습으로 돌아가기</button></div>
           ) : (
             <div className="composer-area">
-              <div className={`context-hint${hintAvailable ? ' is-available' : ''}${hintAvailable && hintsOpen ? ' is-expanded' : ''}`} aria-hidden={!hintAvailable} inert={!hintAvailable}><button className="hint-toggle" onClick={() => setHintsOpen(open => !open)} aria-expanded={hintAvailable && hintsOpen} aria-controls="conversation-hints">힌트</button><p id="conversation-hints" aria-hidden={!hintAvailable || !hintsOpen}>{session.guidance?.hint || session.feedback}</p></div>
-              {hasPending && !busy && <button className="support-button" onClick={onRetry}>기록은 그대로 · 응답 다시 받기</button>}
+              <div className={`context-hint${hintAvailable ? ' is-available' : ''}${hintAvailable && hintsOpen ? ' is-expanded' : ''}`} aria-hidden={!hintAvailable} inert={!hintAvailable}><button className="hint-toggle" onClick={() => setHintsOpen(open => !open)} aria-expanded={hintAvailable && hintsOpen} aria-controls="conversation-hints">힌트</button><p id="conversation-hints" aria-hidden={!hintAvailable || !hintsOpen}>{displayText(session.guidance?.hint || session.feedback)}</p></div>
+              {hasPending && !busy && <button className="support-button" onClick={onRetry}>기록은 그대로 / 응답 다시 받기</button>}
               <form className="composer" onSubmit={event => { event.preventDefault(); send(); }}>
                 <label className="sr-only" htmlFor="message-input">{c.name}에게 할 말</label>
                 <textarea
@@ -128,7 +129,7 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
                   }} />
                 <button className="send-button" type="submit" aria-label="대화 보내기" disabled={locked}><Icon name="send" /></button>
               </form>
-              <div className="input-meta"><span>Enter 전송 · Shift + Enter 줄바꿈</span><span>{draft.length} / 1,000</span></div>
+              <div className="input-meta"><span>Enter 전송 / Shift + Enter 줄바꿈</span><span>{draft.length} / 1,000</span></div>
               <p className="input-privacy">실제 개인정보는 입력하지 마세요.</p>
             </div>
           )}
@@ -136,14 +137,14 @@ export default function GameView({ session, catalog, mode, aiProviderLabel, busy
         <aside className="notebook">
           <div className="notebook-title"><Icon name="note" /><h2>마음 단서 노트</h2><span>{session.notes.length}개</span></div>
           <div className="notes-list">{session.notes.length ? session.notes.map(note => (
-            <article key={note.id} className="clue-note"><span>아이의 말</span><h3>{note.label}</h3><p>{note.text}</p><button onClick={() => showEvidence(note.evidence.childTurnId)}>대화 보기 <Icon name="arrow" /></button></article>
+            <article key={note.id} className="clue-note"><span>아이의 말</span><h3>{displayText(note.label)}</h3><p>{displayText(note.text)}</p><button onClick={() => showEvidence(note.evidence.childTurnId)}>대화 보기 <Icon name="arrow" /></button></article>
           )) : <div className="empty-note"><Icon name="note" /><p>대화하며 마음을 발견해요.</p></div>}</div>
           <div className="milestones"><h3>함께 확인할 변화</h3>{milestoneLabels.map(([key, label]) => (
             <div key={key} className={session.milestones[key] ? 'achieved' : ''}><span>{session.milestones[key] && <Icon name="check" />}</span>{label}</div>
           ))}</div>
         </aside>
       </div>
-      <div className="game-bottom-note"><Icon name="shield" />{mode === 'demo' ? '규칙 기반 데모 · AI 대화 아님' : `가상 AI 대화 · ${aiProviderLabel}로 전송`}</div>
+      <div className="game-bottom-note"><Icon name="shield" />{mode === 'demo' ? '규칙 기반 데모 / AI 대화 아님' : `가상 AI 대화 / ${aiProviderLabel}로 전송`}</div>
     </main>
   );
 }
