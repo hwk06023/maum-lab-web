@@ -57,3 +57,8 @@ button:not(:disabled):active,.button:active{transform:translateY(1px)}
 .context-hint>p{flex:0 1 0;max-width:0;max-height:0;padding:0;border-width:0;overflow:hidden;opacity:0;transform:translateY(5px);transition:flex-grow 220ms ease,max-width 220ms ease,max-height 220ms ease,padding 220ms ease,opacity 180ms ease,transform 220ms ease}
 .context-hint.is-expanded>p{flex-grow:1;max-width:100%;max-height:220px;padding:9px 14px;border-width:1px;opacity:1;transform:translateY(0)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+/* Cursor affordances follow the interaction, including the full checkbox label. */
+a[href],button:not(:disabled),select:not(:disabled),summary,[role='button']:not([aria-disabled='true']),[role='tab']:not([aria-disabled='true']),[role='switch']:not([aria-disabled='true']),input[type='checkbox']:not(:disabled),input[type='radio']:not(:disabled),input[type='range']:not(:disabled),input[type='file']:not(:disabled),label[for],.checkbox-label{cursor:pointer}
+.checkbox-label>span{cursor:inherit}
+textarea:not(:disabled),input:not([type]):not(:disabled),input[type='text']:not(:disabled),input[type='email']:not(:disabled),input[type='password']:not(:disabled),input[type='search']:not(:disabled),input[type='number']:not(:disabled),[contenteditable='true']{cursor:text}
+button:disabled,input:disabled,textarea:disabled,select:disabled,[aria-disabled='true'],.checkbox-label:has(input:disabled){cursor:not-allowed}
