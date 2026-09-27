@@ -1,5 +1,5 @@
 export interface GameRules { maxTurns: number; thresholds: Record<string,number>; }
-export interface GameRecord extends GameRules { turns:number; remaining:number; outcome:'playing'|'cleared'|'failed'; grade:string|null; scope:string; }
+export interface GameRecord extends GameRules { turns:number; remaining:number; outcome:'playing'|'cleared'|'failed'; grade:string|null; bonus?:string|null; scope:string; }
 export interface PublicCase {
   game?: GameRules;
   id: string;
