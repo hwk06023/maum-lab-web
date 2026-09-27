@@ -104,7 +104,7 @@ export default function GameView({ session, catalog, busy, hasPending, pendingMe
             <span>{session.turns} / 40턴</span>
           </div>
           <div className="chat-messages" role="log" aria-label="대화 기록" aria-live="polite" ref={logRef}>
-            <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{displayText(c.brief)}</p><p className="scenario-role">나의 역할 / 상담자</p></div>
+            <div className="scenario-intro" role="note" aria-label="상황 안내"><strong><Icon name="note" />지금 상황</strong><p>{displayText(c.brief)}</p><p className="scenario-role">나의 역할 / 오늘 처음 만난 상담 선생님</p></div>
             {messages.map(m => m.role === 'guide' || m.role === 'scene'
               ? <div key={m.id} className={`message-${m.role}${highlight === m.id ? ' highlight' : ''}`} id={m.id}><Icon name={m.role === 'scene' ? 'spark' : 'note'} /><p>{displayText(m.text)}</p></div>
               : <div key={m.id} className={`message-row ${m.role}${highlight === m.id ? ' highlight' : ''}`} id={m.id}>

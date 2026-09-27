@@ -309,7 +309,7 @@ function ConsentDialog({ name, demo, onClose, onSubmit }: {
         else setFinished(true);
       }}>
         <div className="consent-details">
-        <div className="consent-note"><strong>당신은 상담자입니다.</strong><p>가상의 아이와 대화하며 작은 변화를 이끌어보세요.<br />성인 교육용이며 실제 상담, 진단이 아닙니다.</p></div>
+        <div className="consent-note"><strong>여러분은 상담 선생님입니다.</strong><p>오늘 처음 만난 가상의 학생과 상담실에서 대화합니다.<br />성인 교육용이며 실제 상담, 진단이 아닙니다.</p></div>
         <label className="checkbox-label"><input type="checkbox" name="consent" required /><span>실제 개인정보 없이, 가상 사례만 입력할게요.</span></label>
         {demo && <p className="small-note">규칙 기반 데모 / AI 호출 없음</p>}
         <p className="small-note">새로고침하거나 연습을 종료하면 대화가 초기화돼요.</p>
