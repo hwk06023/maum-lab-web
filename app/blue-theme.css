@@ -54,8 +54,8 @@ button:not(:disabled):active,.button:active{transform:translateY(1px)}
 .modal-entering::backdrop,.modal-closing::backdrop{opacity:0}
 .context-hint{max-height:0;margin-bottom:0;overflow:hidden;opacity:0;transform:translateY(6px);transition:max-height 220ms ease,margin-bottom 220ms ease,opacity 180ms ease,transform 220ms ease}
 .context-hint.is-available{max-height:240px;margin-bottom:12px;opacity:1;transform:translateY(0)}
-.context-hint>p{flex:0 1 0;max-width:0;max-height:0;padding:0;border-width:0;overflow:hidden;opacity:0;transform:translateY(5px);transition:flex-grow 220ms ease,max-width 220ms ease,max-height 220ms ease,padding 220ms ease,opacity 180ms ease,transform 220ms ease}
-.context-hint.is-expanded>p{flex-grow:1;max-width:100%;max-height:220px;padding:9px 14px;border-width:1px;opacity:1;transform:translateY(0)}
+.context-hint>p{flex:1 1 0;max-width:100%;padding:9px 14px;border-width:1px;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-10px);transition:opacity 200ms ease,transform 220ms ease,visibility 0s linear 220ms}
+.context-hint.is-expanded>p{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0);transition-delay:0s}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 /* Cursor affordances follow the interaction, including the full checkbox label. */
 a[href],button:not(:disabled),select:not(:disabled),summary,[role='button']:not([aria-disabled='true']),[role='tab']:not([aria-disabled='true']),[role='switch']:not([aria-disabled='true']),input[type='checkbox']:not(:disabled),input[type='radio']:not(:disabled),input[type='range']:not(:disabled),input[type='file']:not(:disabled),label[for],.checkbox-label{cursor:pointer}
