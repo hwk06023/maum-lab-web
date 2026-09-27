@@ -292,18 +292,20 @@ function ConsentDialog({ name, demo, onClose, onSubmit }: {
   const [finished, setFinished] = useState(false);
   return (
     <Modal title={`${name}의 이야기를 시작할까요?`} onClose={onClose} closeRequested={finished}>
-      <div className="consent-note"><strong>당신은 상담자입니다.</strong><p>가상의 아이와 대화하며 작은 변화를 이끌어보세요.<br />성인 교육용이며 실제 상담, 진단이 아닙니다.</p></div>
-      <form onSubmit={async event => {
+      <form className="consent-form" onSubmit={async event => {
         event.preventDefault();
         setSubmitting(true);
         const message = await onSubmit(new FormData(event.currentTarget).has('consent'));
         if (message) { setError(message); setSubmitting(false); }
         else setFinished(true);
       }}>
+        <div className="consent-details">
+        <div className="consent-note"><strong>당신은 상담자입니다.</strong><p>가상의 아이와 대화하며 작은 변화를 이끌어보세요.<br />성인 교육용이며 실제 상담, 진단이 아닙니다.</p></div>
         <label className="checkbox-label"><input type="checkbox" name="consent" required /><span>실제 개인정보 없이, 가상 사례만 입력할게요.</span></label>
         {demo && <p className="small-note">규칙 기반 데모 / AI 호출 없음</p>}
         <p className="small-note">새로고침하거나 연습을 종료하면 대화가 초기화돼요.</p>
         <p className="form-error" role="alert">{error}</p>
+        </div>
         <button className="button primary full-width" type="submit" disabled={submitting}>{submitting ? '준비하고 있어요' : '이야기 시작하기'} <Icon name="arrow" /></button>
       </form>
     </Modal>

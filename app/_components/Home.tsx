@@ -15,8 +15,8 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
   return (
     <main id="main">
       <section className="hero page-width" aria-labelledby="hero-title"><div className="hero-copy">
-        <p className="eyebrow"><span className="eyebrow-line"></span>마음을 이해하는 대화 연습</p>
-        <h1 id="hero-title">대화로 여는<br /><em>작은 변화.</em></h1>
+        <div className="hero-heading"><p className="eyebrow"><span className="eyebrow-line"></span>마음을 이해하는 대화 연습</p>
+        <h1 id="hero-title">대화로 여는<br /><em>작은 변화.</em></h1></div>
         <div className="hero-summary"><p className="hero-description">아이의 마음을 듣고,<br />함께 다음 행동을 찾아요.</p><p className="hero-footnote"><Icon name="shield" /> 성인을 위한 가상 상담</p></div>
         <a className="button primary" href="#stories">연습 시작하기 <Icon name="arrow" /></a>
       </div><div className="hero-art" aria-hidden="true">
@@ -42,7 +42,7 @@ export function Home({ catalog, filter, onFilter, onStart, onPreload }: {
               <div className="card-visual"><span className="level-badge">LEVEL {String(c.level).padStart(2, '0')}</span><span className="visual-orbit"></span><Icon name={c.motif} className="motif" /><span className="card-index">{String(catalog.indexOf(c) + 1).padStart(2, '0')}</span></div>
               <div className="card-body">
                 <div className="persona-line"><strong>{c.name}</strong><span>만 {c.age}세 / {c.gender}</span></div>
-                <h3>{displayText(c.title)}</h3><p>{displayText(c.subtitle)}</p>
+                <div className="story-summary"><h3>{displayText(c.title)}</h3><p>{displayText(c.subtitle)}</p></div>
                 <span className="skill-tag"><Icon name="leaf" />{c.skill}</span>
                 <button className="card-start" data-intent={`case:${c.id}`} aria-label={`${c.name}의 이야기 만나기`} onClick={() => onStart(c.id)} onPointerEnter={onPreload} onFocus={onPreload}>이야기 만나기 <Icon name="arrow" /></button>
               </div>

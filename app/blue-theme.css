@@ -74,3 +74,33 @@ html,body{word-break:keep-all;overflow-wrap:break-word}
 .site-header.is-stuck::after{background:var(--line);transform:scaleX(1)}
 #stories{scroll-margin-top:120px}
 @media(prefers-reduced-motion:reduce){.site-header::after{transition:none}}
+/* Keep related copy together; preserve breathing room between sections and actions. */
+.consent-details,.hero-heading,.story-summary{display:flex;flex-direction:column;min-width:0}
+.modal .consent-form{gap:36px}
+.consent-details{gap:10px}
+.consent-details>.consent-note,.consent-details>.checkbox-label,.consent-details>.small-note,.consent-details>.form-error{margin:0}
+.consent-details>.form-error:empty{display:none}
+.hero-heading{gap:14px;margin-bottom:24px}
+.hero-heading h1{margin:0}
+.hero-summary{display:flex;flex-direction:column;gap:10px}
+.hero-summary .hero-footnote{margin-top:0}
+.section-heading>div{gap:8px}
+.section-heading h2{margin-top:0}
+.story-summary{gap:8px;margin-top:14px}
+.story-summary h3{margin:0}
+.story-summary>p{margin:0;padding:12px 14px;background:var(--soft);border-radius:10px;font-size:12px;line-height:1.8;color:var(--muted);min-height:68px}
+.card-body .skill-tag{margin:12px 0 24px}
+.guide-steps section>div{gap:5px}
+.guide-steps section p{margin-top:0}
+.scenario-intro{display:flex;flex-direction:column;gap:8px}
+.scenario-intro>p{margin:0}
+.profile-detail{display:flex;flex-direction:column;gap:6px}
+.profile-detail>strong{margin:0}
+.clue-note{gap:7px}
+.clue-note>h3,.clue-note>p{margin:0}
+.clue-note>button{margin-top:8px}
+.site-footer>div{display:flex;flex-direction:column;gap:6px}
+.site-footer>div>span{margin:0}
+@media(max-width:700px){.story-summary>p{min-height:0}.profile-detail{display:none}}
+/* Translucent sticky header; retain an opaque fallback without backdrop filtering. */
+@supports ((backdrop-filter:blur(16px)) or (-webkit-backdrop-filter:blur(16px))){.site-header{background:rgba(255,255,255,.82);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%)}}
