@@ -3,7 +3,7 @@
 ## 저장소와 배포 흐름
 
 - 웹: https://github.com/hwk06023/maum-lab-web — Vercel Git 연동, Production branch `main`.
-- 서버: https://github.com/hwk06023/maum-lab-server — 최초 Fly.io 배포는 소유자가 진행. 이후 `main` push → 검사/테스트/Docker 빌드 → Fly 배포.
+- 서버: https://github.com/hwk06023/maum-lab-server — 최초 Fly.io 배포는 소유자가 진행. 이후 `main` push → Docker 빌드 → Fly 배포.
 - 브라우저는 웹의 `/api/*`만 호출합니다. Vercel의 서버리스 함수가 Fly API를 호출하므로 쿠키는 웹 도메인의 HttpOnly 쿠키로 유지됩니다.
 - 웹은 정적 HTML/CSS/JS + Node.js 24 서버리스 함수입니다. Next.js 없이 Vercel 배포가 가능합니다.
 
@@ -67,7 +67,7 @@ Fly 앱은 `maum-lab-server`의 `main`과 저장소 루트의 Dockerfile/fly.tom
 
 앱을 처음 배포한 뒤 로컬 Fly CLI에서 `fly tokens create deploy --app 실제앱이름 --expiry 720h`로 제한된 기간의 배포 토큰을 발급할 수 있습니다. 토큰은 채팅/코드에 붙이지 말고 GitHub Secret에 직접 입력합니다. 만료 전 교체하세요. 기간은 운영 정책에 맞게 조정할 수 있습니다.
 
-워크플로는 이미 `push: main`으로 준비되어 있습니다. 두 설정이 없으면 검사는 수행하고 배포만 건너뛰며 Summary에 이유를 남깁니다. 둘 다 등록한 뒤 Actions의 **Verify and deploy to Fly.io → Run workflow → main**으로 최초 자동 배포를 확인하거나 다음 main push를 사용합니다. PR에서는 검사만 실행합니다.
+워크플로는 이미 `push: main`으로 준비되어 있습니다. 두 설정이 없으면 빌드는 수행하고 배포만 건너뛰며 Summary에 이유를 남깁니다. 둘 다 등록한 뒤 Actions의 **Build and deploy to Fly.io → Run workflow → main**으로 최초 자동 배포를 확인하거나 다음 main push를 사용합니다. PR에서는 빌드만 실행합니다.
 
 `MAUM_PROXY_SECRET`, OpenAI 키, 파일럿 코드는 Fly 런타임 Secret이므로 GitHub Actions에 중복 등록할 필요가 없습니다. Vercel 배포용 GitHub Secret도 필요하지 않습니다.
 
