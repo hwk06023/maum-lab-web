@@ -10,7 +10,7 @@
 - Authored scripts and AI actors are NOT empirical evidence of behavioral or treatment effectiveness.
 - New content must include alternatives, support requirements, counterexamples, and review notes.
 - Generated prompts remain draft until a human review; do not load drafts automatically.
-- Run `npm run check` and `npm test` after changes. No external npm dependencies are required.
+- Run `npm run check` and `npm test` after changes. Runtime dependencies are limited to next, react and react-dom.
 - Storage, rate limiting and budgets are single-process prototype implementations. Do not describe them as distributed or production-hardened.
 - Before publishing, verify the owner and visibility. Default to a new private repo; never overwrite an existing remote.
 - Do not grant an open-source license or upload to third parties without the owner's decision.

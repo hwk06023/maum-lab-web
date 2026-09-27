@@ -5,11 +5,11 @@
 - 웹: https://github.com/hwk06023/maum-lab-web — Vercel Git 연동, Production branch `main`.
 - 서버: https://github.com/hwk06023/maum-lab-server — 최초 Fly.io 배포는 소유자가 진행. 이후 `main` push → Docker 빌드 → Fly 배포.
 - 브라우저는 웹의 `/api/*`만 호출합니다. Vercel의 서버리스 함수가 Fly API를 호출하므로 쿠키는 웹 도메인의 HttpOnly 쿠키로 유지됩니다.
-- 웹은 정적 HTML/CSS/JS + Node.js 24 서버리스 함수입니다. Next.js 없이 Vercel 배포가 가능합니다.
+- 웹은 Next.js App Router 앱입니다. 홈은 ISR로, `/api/*`는 Node.js 24 Route Handler로 배포됩니다.
 
 ## 1. Vercel에 등록할 값
 
-Import Git Repository에서 `maum-lab-web`을 선택합니다. Root Directory는 저장소 루트, Framework Preset은 Other, Node.js는 24.x입니다. `vercel.json`에 Build Command `npm run build`, Output Directory `public`, 함수 실행 시간 60초가 설정되어 있습니다. Production branch를 `main`으로 확인하세요.
+Import Git Repository에서 `maum-lab-web`을 선택합니다. Root Directory는 저장소 루트, Framework Preset은 Next.js, Node.js는 24.x입니다. `vercel.json`에 Framework와 Build Command `npm run build`가, 각 Route Handler에 함수 실행 시간 60초가 설정되어 있습니다. Production branch를 `main`으로 확인하세요.
 
 Settings → Environment Variables에 아래 두 값을 **Production** 범위로 등록합니다. Preview에서도 실제 서버 연결이 필요하면 Preview 범위에도 등록합니다.
 

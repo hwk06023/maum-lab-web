@@ -151,7 +151,7 @@ export async function createApp(options = {}) {
       }
       if (serveStatic && method === 'GET' && assets.has(url.pathname)) {
         const [file, mime] = assets.get(url.pathname);
-        const data = await readFile(path.join(ROOT, 'public', file));
+        const data = await readFile(path.join(ROOT, 'legacy-web', file));
         res.writeHead(200, { 'Content-Type': mime });
         return res.end(data);
       }

@@ -1,7 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-const roots = ['src', 'public', 'scripts', 'tests', 'api', 'lib'];
+const roots = ['src', 'legacy-web', 'scripts', 'tests', 'lib'];
 let count = 0;
 for (const root of roots) {
   for (const entry of await readdir(root, { withFileTypes: true })) {
