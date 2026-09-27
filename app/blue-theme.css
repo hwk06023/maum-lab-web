@@ -94,7 +94,7 @@ html,body{word-break:keep-all;overflow-wrap:break-word}
 .guide-steps section p{margin-top:0}
 .scenario-intro{display:flex;flex-direction:column;gap:8px}
 .scenario-intro>p{margin:0}
-.profile-detail{display:flex;flex-direction:column;gap:6px}
+.profile-detail{display:flex;flex-direction:column;gap:6px;border:1px solid #8aafe8;border-left:3px solid #4f7fd4}
 .profile-detail>strong{margin:0}
 .clue-note{gap:7px}
 .clue-note>h3,.clue-note>p{margin:0}
