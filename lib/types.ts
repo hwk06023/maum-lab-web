@@ -56,6 +56,8 @@ export interface Session {
   plan: { text: string; agreed: boolean } | null;
   milestones: Record<string, boolean>;
   result: { title: string; change: string; finalResponse?: string; disclaimer: string;
+    evaluation?: { overview:string; relationship:string; strength:{messageId:string;quote:string;comment:string}; improvement:{messageId:string;quote:string;comment:string}; nextPhrase:string } | null;
+    evaluationUnavailable?:boolean;
     reflection?: { evidence: { label: string; text: string; messageId: string }[];
       question: string; nextStep: string; supportToConsider?: string | null; scope: string };
   } | null;

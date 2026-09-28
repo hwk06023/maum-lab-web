@@ -115,6 +115,15 @@ export default function GameView({ session, catalog, busy, hasPending, pendingMe
           </div>
           {session.result && !playing ? (
             <section className="result-panel" aria-label="연습 결과"><Icon name="leaf" className="result-icon" /><p className="eyebrow">작은 변화의 기록</p>{session.game && <div className={`game-result ${session.game.outcome}`}><strong>{session.game.outcome === 'cleared' ? `교화 등급 ${session.game.grade}` : '제한 턴 종료'}</strong><p>{session.turns} / {session.game.maxTurns}턴</p>{session.game.bonus && <p>{session.game.bonus}</p>}<small>{session.game.scope}</small></div>}<h2>{displayText(session.result.title)}</h2><p>{displayText(session.result.change)}</p>{session.result.finalResponse && <p className="bubble"><ChildMessage text={session.result.finalResponse} /></p>}
+              {session.result.evaluation && <div className="learning-reflection">
+                <h3>전체 대화 피드백</h3><p>감정을 존중하면서 필요한 한계와 도움을 함께 제시했는지 돌아봐요. 요구를 모두 들어주거나 빨리 완료하는 것이 평가의 기준은 아니에요.</p>
+                <div className="learning-card"><h4>대화의 흐름</h4><p>{displayText(session.result.evaluation.overview)}</p></div>
+                <div className="learning-card"><h4>관계의 변화</h4><p>{displayText(session.result.evaluation.relationship)}</p></div>
+                {(['strength','improvement'] as const).map(key => {const item=session.result!.evaluation![key];return <div className="learning-card" key={key}><h4>{key==='strength'?'잘한 접근':'다음에 다듬을 점'}</h4><p>“{displayText(item.quote)}”</p><p>{displayText(item.comment)}</p><button onClick={()=>showEvidence(item.messageId)}>대화에서 보기</button></div>;})}
+                <div className="learning-card"><h4>다음에는 이렇게 말해보세요</h4><p>{displayText(session.result.evaluation.nextPhrase)}</p></div>
+                <p className="reflection-scope">전체 대화를 바탕으로 한 AI 피드백입니다. 실제 상담 능력이나 학생의 심리를 진단하지 않습니다.</p>
+              </div>}
+              {session.result.evaluationUnavailable && <p role="status">전체 대화 평가를 불러오지 못했어요. 완료 결과와 대화 기록은 그대로 저장할 수 있습니다.</p>}
               {session.result.reflection && <div className="learning-reflection">
                 <h3>내 대화 돌아보기</h3>
                 <div className="reflection-evidence">{session.result.reflection.evidence.map(item => <div className="learning-card" key={item.label}><h4>{item.label}</h4><p>{displayText(item.text)}</p><button onClick={() => showEvidence(item.messageId)}>대화에서 보기</button></div>)}</div>
