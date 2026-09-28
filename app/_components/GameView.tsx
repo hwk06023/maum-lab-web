@@ -45,6 +45,10 @@ export default function GameView({ session, catalog, busy, hasPending, pendingMe
   const { visible, playing } = useDialogueDelivery(session.sessionId || c.id, session.messages);
   const messages = pendingMessage ? [...visible, pendingMessage] : visible;
   const locked = busy || hasPending || playing;
+  const feedbackRequested = useRef(false);
+  useEffect(()=>{
+    if(session.stage==='complete' && !session.result?.evaluation && !session.result?.evaluationUnavailable && !busy && !hasPending && !playing && !feedbackRequested.current){feedbackRequested.current=true;onAction({kind:'feedback'});}
+  },[session.stage,session.result,busy,hasPending,playing,onAction]);
   const completed = milestoneLabels.filter(([key]) => session.milestones[key]).length;
   const learningChecks = session.guidance?.checks ?? milestoneLabels.map(([id, label]) => ({ id, label, done: !!session.milestones[id] }));
   const [lastProgress, setLastProgress] = useState({ turn: session.turns, completed, notes: session.notes.length });
@@ -119,11 +123,11 @@ export default function GameView({ session, catalog, busy, hasPending, pendingMe
                 <h3>전체 대화 피드백</h3><p>감정을 존중하면서 필요한 한계와 도움을 함께 제시했는지 돌아봐요. 요구를 모두 들어주거나 빨리 완료하는 것이 평가의 기준은 아니에요.</p>
                 <div className="learning-card"><h4>대화의 흐름</h4><p>{displayText(session.result.evaluation.overview)}</p></div>
                 <div className="learning-card"><h4>관계의 변화</h4><p>{displayText(session.result.evaluation.relationship)}</p></div>
-                {(['strength','improvement'] as const).map(key => {const item=session.result!.evaluation![key];return <div className="learning-card" key={key}><h4>{key==='strength'?'잘한 접근':'다음에 다듬을 점'}</h4><p>“{displayText(item.quote)}”</p><p>{displayText(item.comment)}</p><button onClick={()=>showEvidence(item.messageId)}>대화에서 보기</button></div>;})}
+                {(['strength','improvement'] as const).map(key => {const item=session.result!.evaluation![key];return <div className="learning-card" key={key}><h4>{key==='strength'?'살려볼 접근과 단서':'다음에 다듬을 점'}</h4><p>“{displayText(item.quote)}”</p><p>{displayText(item.comment)}</p><button onClick={()=>showEvidence(item.messageId)}>대화에서 보기</button></div>;})}
                 <div className="learning-card"><h4>다음에는 이렇게 말해보세요</h4><p>{displayText(session.result.evaluation.nextPhrase)}</p></div>
                 <p className="reflection-scope">전체 대화를 바탕으로 한 AI 피드백입니다. 실제 상담 능력이나 학생의 심리를 진단하지 않습니다.</p>
               </div>}
-              {session.result.evaluationUnavailable && <p role="status">전체 대화 평가를 불러오지 못했어요. 완료 결과와 대화 기록은 그대로 저장할 수 있습니다.</p>}
+              {session.stage==='complete' && !session.result.evaluation && <div className="learning-card" aria-live="polite"><p>{busy?'전체 대화를 읽고 피드백을 준비하고 있어요.':session.result.evaluationUnavailable||hasPending?'평가를 받지 못했어요. 대화와 완료 결과는 보존되어 있어요.':'전체 대화 피드백을 준비합니다.'}</p>{!busy && <button onClick={()=>hasPending?onRetry():onAction({kind:'feedback'})}>피드백 다시 받기</button>}</div>}
               {session.result.reflection && <div className="learning-reflection">
                 <h3>내 대화 돌아보기</h3>
                 <div className="reflection-evidence">{session.result.reflection.evidence.map(item => <div className="learning-card" key={item.label}><h4>{item.label}</h4><p>{displayText(item.text)}</p><button onClick={() => showEvidence(item.messageId)}>대화에서 보기</button></div>)}</div>

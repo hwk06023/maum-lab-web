@@ -63,4 +63,4 @@ export interface Session {
   } | null;
 }
 
-export type Action = { kind: 'say'; text: string } | { kind: 'support' } | { kind: 'resume' };
+export type Action = { kind: 'say'; text: string } | { kind: 'support' } | { kind: 'resume' } | { kind: 'feedback' };
